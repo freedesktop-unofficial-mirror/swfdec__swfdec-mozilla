@@ -1,0 +1,32 @@
+
+Swfdec is a decoder/renderer for Macromedia Flash animations.  The
+decoding and rendering engine is provided in a library that can
+be used by other applications.
+
+This package contains a Mozilla plugin that uses the Swfdec library
+for playing SWF files in a browser capable of loading NS-Plugins.
+It is in an experimental state at the moment, so don't be surprised
+if it crashes your browser.
+
+
+Maintainers:
+
+   see the file MAINTAINERS
+
+
+Notes:
+
+ - If you install into /usr/local, your browser may have difficulty
+   finding the plugin.  This can be solved for mozilla-based
+   browsers by adding /usr/local/lib/mozilla/plugins to the
+   MOZ_PLUGIN_PATH environment variable.
+ 
+ - Sound output is currently only available for ALSA. If you want
+   a different output, feel encouraged to provide patches.
+
+
+Dependencies:
+
+  swfdec (= 0.4.0)
+  Mozilla (>= 1.0.0)
+
