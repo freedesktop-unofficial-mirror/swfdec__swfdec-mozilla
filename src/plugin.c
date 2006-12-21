@@ -24,9 +24,13 @@
 #endif
 
 #include <string.h>
+#include <cairo-xlib.h>
+
+#include <mozilla-config.h>
 #include <npapi.h>
 #include <npupp.h>
 
+#include "swfmoz_loader.h"
 #include "swfmoz_player.h"
 
 NPNetscapeFuncs mozilla_funcs;
@@ -74,15 +78,12 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  g_print ("make plugin stay in memory\n");
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
 	NPPVpluginKeepLibraryInMemory, (void *) PR_TRUE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
-  g_print ("we wanna be windowed\n");
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
-	NPPVpluginWindowBool, (void *) PR_TRUE))
+  	NPPVpluginWindowBool, (void *) PR_FALSE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
-  g_print ("ok, done\n");
   /* this is not lethal, we ignore a failure here */
   CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
       NPPVpluginTransparentBool, (void *) PR_TRUE);
@@ -109,13 +110,108 @@ static NPError
 plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream, 
     NPBool seekable, uint16* stype)
 {
+  SwfdecLoader *loader;
+
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return NPERR_INVALID_INSTANCE_ERROR;
+
+  loader = swfmoz_player_add_stream (instance->pdata, stream);
+  if (loader == NULL)
+    return NPERR_INVALID_URL;
+  stream->pdata = loader;
+  if (stype)
+    *stype = NP_NORMAL;
   return NPERR_NO_ERROR;
 }
 
 static NPError 
 plugin_destroy_stream (NPP instance, NPStream* stream, NPReason reason)
 {
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return NPERR_INVALID_INSTANCE_ERROR;
+  if (!SWFMOZ_IS_LOADER (stream->pdata))
+    return NPERR_INVALID_INSTANCE_ERROR;
+
+  SWFMOZ_LOADER (stream->pdata)->stream = NULL;
+  swfdec_loader_eof (stream->pdata);
+  g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
+}
+
+static int32
+plugin_write_ready (NPP instance, NPStream* stream)
+{
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return -1;
+  if (!SWFMOZ_IS_LOADER (stream->pdata))
+    return -1;
+
+  return G_MAXINT32;
+}
+
+static int32
+plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
+{
+  SwfdecBuffer *new;
+  
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return -1;
+  if (!SWFMOZ_IS_LOADER (stream->pdata))
+    return -1;
+
+  new = swfdec_buffer_new ();
+  new->length = len;
+  new->data = g_memdup (buffer, len);
+  swfdec_loader_push (stream->pdata, new);
+  swfmoz_player_render (instance->pdata, 0, 0, 600, 350);
+  return len;
+}
+
+static NPError 
+plugin_set_window (NPP instance, NPWindow *window)
+{
+  cairo_t *cr;
+  
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return NPERR_INVALID_INSTANCE_ERROR;
+
+  if (window) {
+    cairo_surface_t *surface;
+    NPSetWindowCallbackStruct *info = window->ws_info;
+
+    surface = cairo_xlib_surface_create (info->display, (Window) window->window,
+	info->visual, window->width, window->height);
+    cr = cairo_create (surface);
+    cairo_translate (cr, window->x, window->y);
+    cairo_surface_destroy (surface);
+  } else {
+    cr = NULL;
+  }
+  swfmoz_player_set_target (instance->pdata, cr);
+  cairo_destroy (cr);
+  return NPERR_NO_ERROR;
+}
+
+static int16
+plugin_handle_event (NPP instance, void *eventp)
+{
+  XEvent *event = eventp;
+
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return FALSE;
+
+  g_print ("HandleEvent called\n");
+  switch (event->type) {
+    case Expose:
+      {
+	XExposeEvent *expose = (XExposeEvent *) event;
+	swfmoz_player_render (instance->pdata, expose->x, expose->y, expose->width, expose->height);
+	return TRUE;
+      }
+    default:
+      break;
+  }
+  return FALSE;
 }
 
 NPError
@@ -124,7 +220,6 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
   PRBool b = PR_FALSE;
   NPNToolkitType toolkit = 0;
 
-  g_print ("Hi!\n");
   if (moz_funcs == NULL || plugin_funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
@@ -138,32 +233,30 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
   mozilla_funcs = *moz_funcs;
 
   /* we must be GTK 2 */
-  g_print ("checking toolkit\n");
   if (CallNPN_GetValueProc(mozilla_funcs.getvalue, NULL,
 	NPNVToolkit, (void *) &toolkit) || toolkit != NPNVGtk2)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
   /* we want XEmbed embedding */
-  g_print ("checking XEmbed\n");
   if (CallNPN_GetValueProc(mozilla_funcs.getvalue, NULL,
 	NPNVSupportsXEmbedBool, (void *) &b) || !b)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
-  g_print ("initialization requirements met\n");
   memset (plugin_funcs, 0, sizeof (NPPluginFuncs));
   plugin_funcs->size = sizeof (NPPluginFuncs);
   plugin_funcs->version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
   plugin_funcs->newp = NewNPP_NewProc (plugin_new);
   plugin_funcs->destroy = NewNPP_DestroyProc (plugin_destroy);
+
   plugin_funcs->newstream = NewNPP_NewStreamProc (plugin_new_stream);
   plugin_funcs->destroystream =
       NewNPP_DestroyStreamProc (plugin_destroy_stream);
-#if 0
-  plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
-  plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
+  plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
+  plugin_funcs->event = NewNPP_HandleEventProc (plugin_handle_event);
+#if 0
+  plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->print = NULL;
-  plugin_funcs->event = NewNPP_HandleEventProc (plugin_event);
   plugin_funcs->urlnotify = NULL;
   plugin_funcs->javaClass = NULL;
   plugin_funcs->getvalue = NULL;
@@ -176,7 +269,6 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 NPError
 NP_Shutdown (void)
 {
-  g_print ("Shutdown!\n");
   return NPERR_NO_ERROR;
 }
 

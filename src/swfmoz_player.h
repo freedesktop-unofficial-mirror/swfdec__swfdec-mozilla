@@ -42,6 +42,8 @@ struct _SwfmozPlayer
 
   NPP			instance;		/* the mozilla plugin */
   SwfdecPlayer *	player;			/* the player isntance */
+  gboolean		player_initialized;	/* TRUE if we've set our initial stream */
+  cairo_t *		target;			/* what we draw to */
 };
 
 struct _SwfmozPlayerClass
@@ -51,7 +53,16 @@ struct _SwfmozPlayerClass
 
 GType		swfmoz_player_get_type   	(void);
 
-SwfmozPlayer *	swfmoz_player_new	  	(NPP	instance);
+SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance);
+SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
+						 NPStream *		stream);
+void		swfmoz_player_set_target	(SwfmozPlayer *		player,
+						 cairo_t *		cr);
+void		swfmoz_player_render		(SwfmozPlayer *		player,
+						 int			x,
+						 int			y,
+						 int			width,
+						 int			height);
 					 
 
 G_END_DECLS
