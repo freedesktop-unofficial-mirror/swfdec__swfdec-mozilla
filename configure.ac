@@ -57,8 +57,8 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-SWFDEC_REQUIRES=0.3.99
-PKG_CHECK_MODULES(SWFDEC, swfdec-$SWFDEC_MAJORMINOR >= $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+SWFDEC_REQUIRES=0.3.99.1
+PKG_CHECK_MODULES(SWFDEC, swfdec-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
   AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR, which is required for build])
 fi
@@ -73,7 +73,7 @@ if test "$HAVE_ALSA" = "no"; then
 fi
 AM_CONDITIONAL(WITH_ALSA,[test "$HAVE_ALSA" != "no"])
 
-PKG_CHECK_MODULES(CAIRO, cairo >= 0.4.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+PKG_CHECK_MODULES(CAIRO, cairo >= 1.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
