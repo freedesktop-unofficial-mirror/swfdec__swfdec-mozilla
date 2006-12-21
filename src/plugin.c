@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <npapi.h>
 #include <npupp.h>
 
@@ -90,7 +91,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
 
-  //instance->pdata = swfmoz_player_new (instance);
+  instance->pdata = swfmoz_player_new (instance);
   return NPERR_NO_ERROR;
 }
 
@@ -101,6 +102,19 @@ plugin_destroy (NPP instance, NPSavedData **save)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   g_object_unref (instance->pdata);
+  return NPERR_NO_ERROR;
+}
+
+static NPError 
+plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream, 
+    NPBool seekable, uint16* stype)
+{
+  return NPERR_NO_ERROR;
+}
+
+static NPError 
+plugin_destroy_stream (NPP instance, NPStream* stream, NPReason reason)
+{
   return NPERR_NO_ERROR;
 }
 
@@ -135,15 +149,16 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
   g_print ("initialization requirements met\n");
+  memset (plugin_funcs, 0, sizeof (NPPluginFuncs));
   plugin_funcs->size = sizeof (NPPluginFuncs);
   plugin_funcs->version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
   plugin_funcs->newp = NewNPP_NewProc (plugin_new);
   plugin_funcs->destroy = NewNPP_DestroyProc (plugin_destroy);
-#if 0
-  plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
   plugin_funcs->newstream = NewNPP_NewStreamProc (plugin_new_stream);
   plugin_funcs->destroystream =
       NewNPP_DestroyStreamProc (plugin_destroy_stream);
+#if 0
+  plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
   plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
@@ -161,6 +176,7 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 NPError
 NP_Shutdown (void)
 {
+  g_print ("Shutdown!\n");
   return NPERR_NO_ERROR;
 }
 
