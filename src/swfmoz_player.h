@@ -36,24 +36,31 @@ typedef struct _SwfmozPlayerClass SwfmozPlayerClass;
 #define SWFMOZ_PLAYER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFMOZ_TYPE_PLAYER, SwfmozPlayerClass))
 #define SWFMOZ_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFMOZ_TYPE_PLAYER, SwfmozPlayerClass))
 
-struct _SwfmozPlayer
-{
+struct _SwfmozPlayer {
   GObject *		object;
 
   NPP			instance;		/* the mozilla plugin */
-  SwfdecPlayer *	player;			/* the player isntance */
+
+  GMutex *		mutex;			/* the mutext to guard the player's thread */
+  GThread *		thread;			/* the thread we're running */
+  GMainContext *	context;		/* the main context run by the thread */
+  GMainLoop *		loop;			/* loop the thread is running */
+
+  SwfdecPlayer *	player;			/* the player instance */
   gboolean		player_initialized;	/* TRUE if we've set our initial stream */
   cairo_t *		target;			/* what we draw to */
 };
 
-struct _SwfmozPlayerClass
-{
+struct _SwfmozPlayerClass {
   GObjectClass		object_class;
 };
 
 GType		swfmoz_player_get_type   	(void);
 
 SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance);
+
+void		swfmoz_player_lock		(SwfmozPlayer *         player);
+void		swfmoz_player_unlock		(SwfmozPlayer *         player);
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);
 void		swfmoz_player_set_target	(SwfmozPlayer *		player,

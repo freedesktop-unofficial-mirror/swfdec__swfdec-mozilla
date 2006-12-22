@@ -36,6 +36,15 @@ swfmoz_player_dispose (GObject *object)
     cairo_destroy (player->target);
     player->target = NULL;
   }
+  if (player->thread) {
+    g_main_loop_quit (player->loop);
+    if (g_thread_join (player->thread) != player)
+      g_assert_not_reached ();
+    player->thread = NULL;
+  }
+  g_main_loop_unref (player->loop);
+  g_main_context_unref (player->context);
+  g_mutex_free (player->mutex);
 
   G_OBJECT_CLASS (swfmoz_player_parent_class)->dispose (object);
 }
@@ -48,10 +57,27 @@ swfmoz_player_class_init (SwfmozPlayerClass *klass)
   object_class->dispose = swfmoz_player_dispose;
 }
 
+static gpointer
+swfmoz_player_run (gpointer playerp)
+{
+  SwfmozPlayer *player = playerp;
+
+  g_main_loop_run (player->loop);
+
+  return player;
+}
+
 static void
 swfmoz_player_init (SwfmozPlayer *player)
 {
+  player->mutex = g_mutex_new ();
   player->player = swfdec_player_new ();
+  player->context = g_main_context_new ();
+  player->loop = g_main_loop_new (player->context, FALSE);
+  player->thread = g_thread_create (swfmoz_player_run, player, TRUE, NULL);
+  if (!player->thread) {
+    g_critical ("Could not create plugin thread");
+  }
 }
 
 SwfmozPlayer *
@@ -114,3 +140,14 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
       x - matrix.x0, y - matrix.y0, width, height);
 }
 
+void
+swfmoz_player_lock (SwfmozPlayer *player)
+{
+  g_mutex_lock (player->mutex);
+}
+
+void
+swfmoz_player_unlock (SwfmozPlayer *player)
+{
+  g_mutex_unlock (player->mutex);
+}

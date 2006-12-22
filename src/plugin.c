@@ -32,6 +32,7 @@
 
 #include "swfmoz_loader.h"
 #include "swfmoz_player.h"
+#include "plugin_x11.h"
 
 NPNetscapeFuncs mozilla_funcs;
 
@@ -166,54 +167,34 @@ plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buf
   new->length = len;
   new->data = g_memdup (buffer, len);
   swfdec_loader_push (stream->pdata, new);
-  swfmoz_player_render (instance->pdata, 0, 0, 600, 350);
   return len;
 }
 
 static NPError 
 plugin_set_window (NPP instance, NPWindow *window)
 {
-  cairo_t *cr;
+  NPSetWindowCallbackStruct *info = window->ws_info;
   
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
   if (window) {
-    cairo_surface_t *surface;
-    NPSetWindowCallbackStruct *info = window->ws_info;
-
-    surface = cairo_xlib_surface_create (info->display, (Window) window->window,
-	info->visual, window->width, window->height);
-    cr = cairo_create (surface);
-    cairo_translate (cr, window->x, window->y);
-    cairo_surface_destroy (surface);
+    plugin_x11_setup_windowed (instance->pdata, DisplayString (info->display),
+	(Window) window->window, window->width, window->height);
   } else {
-    cr = NULL;
+    plugin_x11_teardown (instance->pdata);
   }
-  swfmoz_player_set_target (instance->pdata, cr);
-  cairo_destroy (cr);
   return NPERR_NO_ERROR;
 }
 
 static int16
 plugin_handle_event (NPP instance, void *eventp)
 {
-  XEvent *event = eventp;
-
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return FALSE;
 
-  g_print ("HandleEvent called\n");
-  switch (event->type) {
-    case Expose:
-      {
-	XExposeEvent *expose = (XExposeEvent *) event;
-	swfmoz_player_render (instance->pdata, expose->x, expose->y, expose->width, expose->height);
-	return TRUE;
-      }
-    default:
-      break;
-  }
+  /* FIXME: implement */
+  g_assert_not_reached ();
   return FALSE;
 }
 
