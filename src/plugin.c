@@ -1,4 +1,4 @@
-/* Swfdec
+/* Swfdec Mozilla Plugin
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
  *		      2006 Benjamin Otte <otte@gnome.org>
@@ -81,9 +81,12 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
 	NPPVpluginKeepLibraryInMemory, (void *) PR_TRUE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
+#if 0
+  /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work */
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
   	NPPVpluginWindowBool, (void *) PR_FALSE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
+#endif
   /* this is not lethal, we ignore a failure here */
   CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
       NPPVpluginTransparentBool, (void *) PR_TRUE);
