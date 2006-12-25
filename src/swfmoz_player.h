@@ -41,10 +41,7 @@ struct _SwfmozPlayer {
 
   NPP			instance;		/* the mozilla plugin */
 
-  GMutex *		mutex;			/* the mutext to guard the player's thread */
-  GThread *		thread;			/* the thread we're running */
   GMainContext *	context;		/* the main context run by the thread */
-  GMainLoop *		loop;			/* loop the thread is running */
 
   SwfdecPlayer *	player;			/* the player instance */
   gboolean		player_initialized;	/* TRUE if we've set our initial stream */
@@ -59,8 +56,6 @@ GType		swfmoz_player_get_type   	(void);
 
 SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance);
 
-void		swfmoz_player_lock		(SwfmozPlayer *         player);
-void		swfmoz_player_unlock		(SwfmozPlayer *         player);
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);
 void		swfmoz_player_set_target	(SwfmozPlayer *		player,

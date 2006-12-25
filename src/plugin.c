@@ -79,18 +79,25 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
+  /* if no main loop is running, we're not able to use it, and we need a main loop */
+  if (g_main_depth () == 0)
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
 	NPPVpluginKeepLibraryInMemory, (void *) PR_TRUE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
 #if 0
-  /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work */
+  /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work
+   * probably needs user agent sniffing to make this work correctly (iff gecko 
+   * implements it
+   */
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
   	NPPVpluginWindowBool, (void *) PR_FALSE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
+	NPPVpluginTransparentBool, (void *) PR_TRUE))
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
 #endif
-  /* this is not lethal, we ignore a failure here */
-  CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
-      NPPVpluginTransparentBool, (void *) PR_TRUE);
 
   /* Init functioncalling (even g_type_init) gets postponed until we know we
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
