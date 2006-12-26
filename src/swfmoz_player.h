@@ -47,6 +47,9 @@ struct _SwfmozPlayer {
   gboolean		player_initialized;	/* TRUE if we've set our initial stream */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   cairo_t *		target;			/* what we draw to */
+  cairo_t *		intermediate;		/* intermediate target to avoid flicker */
+  unsigned int		target_width;		/* width of target */
+  unsigned int		target_height;		/* height of target */
 
   /* for windowed operation */
   GSource *		repaint_source;		/* set when repaint is necessary */
@@ -54,6 +57,10 @@ struct _SwfmozPlayer {
   int			y;
   int			width;
   int			height;
+
+  /* state */
+  gboolean		paused;			/* if the player acts */
+  GSource *		iterate_source;		/* source used for iterating */
 };
 
 struct _SwfmozPlayerClass {
@@ -68,12 +75,23 @@ SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance,
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);
 void		swfmoz_player_set_target	(SwfmozPlayer *		player,
-						 cairo_t *		cr);
+						 cairo_t *		cr,
+						 unsigned int		width,
+						 unsigned int		height);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
 						 int			x,
 						 int			y,
 						 int			width,
 						 int			height);
+gboolean	swfmoz_player_mouse_changed	(SwfmozPlayer *		player,
+						 int			button,
+						 int			x,
+						 int			y,
+						 gboolean		down);
+
+gboolean	swfmoz_player_get_paused	(SwfmozPlayer *		player);
+void		swfmoz_player_set_paused	(SwfmozPlayer *		player,
+						 gboolean		paused);
 					 
 
 G_END_DECLS

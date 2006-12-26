@@ -135,7 +135,16 @@ plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
     case Expose:
       {
 	XExposeEvent *expose = (XExposeEvent *) event;
-	swfmoz_player_render (player, expose->x, expose->y, expose->width, expose->height);
+	swfmoz_player_render (player, expose->x, expose->y, 
+	    expose->width, expose->height);
+	break;
+      }
+    case ButtonPress:
+    case ButtonRelease:
+      {
+	XButtonEvent *button = (XButtonEvent *) event;
+	swfmoz_player_mouse_changed (player, button->button, button->x, 
+	    button->y, event->type == ButtonPress);
 	break;
       }
     default:
@@ -163,13 +172,14 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, const char *display_name,
   data->window = XCreateSimpleWindow (data->display, window, 0, 0, width, height,
       0, 0, 0);
   XMapWindow (data->display, data->window);
-  XSelectInput (data->display, data->window, ExposureMask);
+  XSelectInput (data->display, data->window, ExposureMask | ButtonPressMask | 
+      ButtonReleaseMask);
 
   XGetWindowAttributes (data->display, data->window, &attr);
   surface = cairo_xlib_surface_create (data->display, data->window,
       attr.visual, width, height);
   cr = cairo_create (surface);
-  swfmoz_player_set_target (player, cr);
+  swfmoz_player_set_target (player, cr, width, height);
   cairo_surface_destroy (surface);
 }
 
@@ -177,5 +187,5 @@ void
 plugin_x11_teardown (SwfmozPlayer *player)
 {
   swfmoz_x11_data_set (player, NULL);
-  swfmoz_player_set_target (player, NULL);
+  swfmoz_player_set_target (player, NULL, 0, 0);
 }
