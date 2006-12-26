@@ -37,7 +37,7 @@ typedef struct _SwfmozPlayerClass SwfmozPlayerClass;
 #define SWFMOZ_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFMOZ_TYPE_PLAYER, SwfmozPlayerClass))
 
 struct _SwfmozPlayer {
-  GObject *		object;
+  GObject		object;
 
   NPP			instance;		/* the mozilla plugin */
 
@@ -45,7 +45,15 @@ struct _SwfmozPlayer {
 
   SwfdecPlayer *	player;			/* the player instance */
   gboolean		player_initialized;	/* TRUE if we've set our initial stream */
+  gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   cairo_t *		target;			/* what we draw to */
+
+  /* for windowed operation */
+  GSource *		repaint_source;		/* set when repaint is necessary */
+  int			x;			/* area to repaint */
+  int			y;
+  int			width;
+  int			height;
 };
 
 struct _SwfmozPlayerClass {
@@ -54,7 +62,8 @@ struct _SwfmozPlayerClass {
 
 GType		swfmoz_player_get_type   	(void);
 
-SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance);
+SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance,
+						 gboolean		windowless);
 
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);

@@ -37,6 +37,16 @@
 NPNetscapeFuncs mozilla_funcs;
 
 
+/*** forward declarations for plugin API ***/
+
+void
+plugin_invalidate_rect (NPP instance, NPRect *rect)
+{
+  CallNPN_InvalidateRectProc (mozilla_funcs.invalidaterect, instance, rect);
+}
+
+/*** plugin implementation ***/
+
 char *
 NP_GetMIMEDescription (void)
 {
@@ -103,7 +113,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
 
-  instance->pdata = swfmoz_player_new (instance);
+  instance->pdata = swfmoz_player_new (instance, FALSE);
   return NPERR_NO_ERROR;
 }
 

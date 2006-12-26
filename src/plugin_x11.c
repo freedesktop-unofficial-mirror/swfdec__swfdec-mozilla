@@ -139,7 +139,7 @@ plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
 	break;
       }
     default:
-      g_print ("unhandled event %d\n", event->type);
+      g_printerr ("unhandled event %d\n", event->type);
       break;
   }
   return TRUE;

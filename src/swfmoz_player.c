@@ -21,7 +21,9 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "swfmoz_player.h"
+#include "plugin.h"
 #include "swfmoz_loader.h"
 
 G_DEFINE_TYPE (SwfmozPlayer, swfmoz_player, G_TYPE_OBJECT)
@@ -36,6 +38,11 @@ swfmoz_player_dispose (GObject *object)
     cairo_destroy (player->target);
     player->target = NULL;
   }
+  if (player->repaint_source) {
+    g_source_destroy (player->repaint_source);
+    g_source_unref (player->repaint_source);
+    player->repaint_source = NULL;
+  }
 
   G_OBJECT_CLASS (swfmoz_player_parent_class)->dispose (object);
 }
@@ -48,20 +55,61 @@ swfmoz_player_class_init (SwfmozPlayerClass *klass)
   object_class->dispose = swfmoz_player_dispose;
 }
 
+static gboolean
+swfmoz_player_idle_redraw (gpointer playerp)
+{
+  SwfmozPlayer *player = playerp;
+
+  swfmoz_player_render (player, player->x, player->y, player->width, player->height);
+  return TRUE;
+}
+
+static void
+swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y, double width, double height, SwfmozPlayer *player)
+{
+  g_print ("invalidating %g %g  %g %g\n", x, y, width, height);
+  if (player->windowless) {
+    NPRect rect;
+    rect.left = floor (x);
+    rect.top = floor (y);
+    rect.right = ceil (x + width);
+    rect.bottom = ceil (y + height);
+    plugin_invalidate_rect (player->instance, &rect);
+  } else if (player->repaint_source) {
+    player->x = MIN (player->x, floor (x));
+    player->y = MIN (player->y, floor (y));
+    player->width = MAX (player->width, ceil (x + width) - player->x);
+    player->height = MAX (player->height, ceil (y + height) - player->y);
+  } else {
+    GSource *source = g_idle_source_new ();
+    player->repaint_source = source;
+    /* match GTK */
+    g_source_set_priority (source, G_PRIORITY_HIGH_IDLE + 20);
+    g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
+    g_source_attach (source, player->context);
+    player->x = floor (x);
+    player->y = floor (y);
+    player->width = ceil (x + width) - player->x;
+    player->height = ceil (y + height) - player->y;
+  }
+}
+
 static void
 swfmoz_player_init (SwfmozPlayer *player)
 {
   player->player = swfdec_player_new ();
-  player->context = g_main_context_default ();
+  g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
+  player->context = NULL;
 }
 
 SwfmozPlayer *
-swfmoz_player_new (NPP instance)
+swfmoz_player_new (NPP instance, gboolean windowless)
 {
   SwfmozPlayer *ret;
 
   ret = g_object_new (SWFMOZ_TYPE_PLAYER, NULL);
   ret->instance = instance;
+  ret->windowless = windowless;
 
   return SWFMOZ_PLAYER (ret);
 }
@@ -110,8 +158,12 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     return;
   /* FIXME: do this without a need to use the matrix */
   cairo_get_matrix (player->target, &matrix);
-  g_print ("rendering %d %d  %d %d - offset by %g %g\n", x, y, width, height, matrix.x0, matrix.y0);
   swfdec_player_render (player->player, player->target, 
       x - matrix.x0, y - matrix.y0, width, height);
+  if (player->repaint_source) {
+    g_source_destroy (player->repaint_source);
+    g_source_unref (player->repaint_source);
+    player->repaint_source = NULL;
+  }
 }
 
