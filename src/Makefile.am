@@ -15,6 +15,7 @@ libswfdecmozilla_la_SOURCES = \
 	swfmoz_player.c
 
 noinst_HEADERS = \
+	plugin.h \
 	plugin_x11.h \
 	swfmoz_loader.h \
 	swfmoz_player.h
