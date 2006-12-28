@@ -76,7 +76,7 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
       *val = "Shockwave Flash";
       break;
     case NPPVpluginDescriptionString:
-      *val = "Shockwave Flash 9.0 (<A HREF=\"http://swfdec.freedesktop.org\">Swfdec</A>" VERSION ")";
+      *val = "Shockwave Flash 9.0 (<A HREF=\"http://swfdec.freedesktop.org\">Swfdec</A> " VERSION ")";
       break;
     case NPPVpluginNeedsXEmbed:
       *((PRBool*) val) = PR_TRUE;
