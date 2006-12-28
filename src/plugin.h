@@ -25,6 +25,9 @@
 G_BEGIN_DECLS
 
 
+void	plugin_get_url			(NPP		instance,
+					 const char *	url,
+					 const char *	target);
 void	plugin_get_url_notify		(NPP		instance,
 					 const char *	url,
 					 const char *	target,

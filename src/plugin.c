@@ -40,6 +40,12 @@ NPNetscapeFuncs mozilla_funcs;
 /*** forward declarations for plugin API ***/
 
 void
+plugin_get_url (NPP instance, const char *url, const char *target)
+{
+  CallNPN_GetURLProc (mozilla_funcs.geturl, instance, url, target);
+}
+
+void
 plugin_get_url_notify (NPP instance, const char *url,
     const char *target, void *data)
 {
