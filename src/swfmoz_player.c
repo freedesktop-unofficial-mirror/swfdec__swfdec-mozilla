@@ -40,31 +40,42 @@ swfmoz_player_idle_redraw (gpointer playerp)
 }
 
 static void
-swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y, double width, double height, SwfmozPlayer *player)
+swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y, 
+    double width, double height, SwfmozPlayer *player)
 {
+  int xi, yi, wi, hi;
+
+  xi = MAX ((int) floor (x), 0);
+  yi = MAX ((int) floor (y), 0);
+  wi = (int) ceil (x + width) - xi;
+  hi = (int) ceil (y + height) - yi;
+  if (wi <= 0 || hi <= 0)
+    return;
+
   if (player->windowless) {
     NPRect rect;
-    rect.left = floor (x);
-    rect.top = floor (y);
-    rect.right = ceil (x + width);
-    rect.bottom = ceil (y + height);
+    rect.left = xi;
+    rect.top = yi;
+    rect.right = xi + wi;
+    rect.bottom = yi + hi;
     plugin_invalidate_rect (player->instance, &rect);
   } else if (player->repaint_source) {
-    player->x = MIN (player->x, floor (x));
-    player->y = MIN (player->y, floor (y));
-    player->width = MAX (player->width, ceil (x + width) - player->x);
-    player->height = MAX (player->height, ceil (y + height) - player->y);
+    player->width = MAX (player->x + player->width, xi + wi);
+    player->height = MAX (player->y + player->height, yi + hi);
+    player->x = MIN (player->x, xi);
+    player->y = MIN (player->y, yi);
+    player->width -= player->x;
+    player->height -= player->y;
   } else {
     GSource *source = g_idle_source_new ();
     player->repaint_source = source;
-    /* match GTK */
-    g_source_set_priority (source, G_PRIORITY_HIGH_IDLE + 20);
+    g_source_set_priority (source, G_PRIORITY_HIGH_IDLE + 20); /* match GTK */
     g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
     g_source_attach (source, player->context);
-    player->x = floor (x);
-    player->y = floor (y);
-    player->width = ceil (x + width) - player->x;
-    player->height = ceil (y + height) - player->y;
+    player->x = xi;
+    player->y = yi;
+    player->width = wi;
+    player->height = hi;
   }
 }
 
