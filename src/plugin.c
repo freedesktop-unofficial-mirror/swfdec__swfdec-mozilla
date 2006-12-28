@@ -73,11 +73,10 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
 		      
   switch (var) {
     case NPPVpluginNameString:
-      *val = "Swfdec Flash Player " VERSION;
+      *val = "Shockwave Flash";
       break;
     case NPPVpluginDescriptionString:
-      *val = "A plugin to play Flash files using the Swfdec library, see "
-	"<A HREF=\"http://swfdec.freedesktop.org\">http://swfdec.freedesktop.org</A>";
+      *val = "Shockwave Flash 9.0 (<A HREF=\"http://swfdec.freedesktop.org\">Swfdec</A>" VERSION ")";
       break;
     case NPPVpluginNeedsXEmbed:
       *((PRBool*) val) = PR_TRUE;
