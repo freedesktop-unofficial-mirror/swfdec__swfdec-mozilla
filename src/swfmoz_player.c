@@ -24,6 +24,7 @@
 #include <math.h>
 #include "swfmoz_player.h"
 #include "plugin.h"
+#include "swfdec_playback.h"
 #include "swfdec_source.h"
 #include "swfmoz_loader.h"
 
@@ -88,6 +89,9 @@ swfmoz_player_dispose (GObject *object)
     player->repaint_source = NULL;
   }
 
+  /* sanity checks */
+  g_assert (player->audio == NULL);
+
   G_OBJECT_CLASS (swfmoz_player_parent_class)->dispose (object);
 }
 
@@ -104,6 +108,7 @@ swfmoz_player_init (SwfmozPlayer *player)
 {
   player->player = swfdec_player_new ();
   g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
+  player->context = g_main_context_default ();
   player->paused = TRUE;
 }
 
@@ -243,6 +248,19 @@ swfmoz_player_invalidate (SwfmozPlayer *player)
       player->target_height, player);
 }
 
+static void
+swfmoz_player_update_audio (SwfmozPlayer *player)
+{
+  gboolean should_play = !player->paused;
+
+  if (should_play && player->audio == NULL) {
+    player->audio = swfdec_playback_open (player->player, player->context);
+  } else if (!should_play && player->audio != NULL) {
+    swfdec_playback_close (player->audio);
+    player->audio = NULL;
+  }
+}
+
 void
 swfmoz_player_set_paused (SwfmozPlayer *player, gboolean paused)
 {
@@ -252,6 +270,7 @@ swfmoz_player_set_paused (SwfmozPlayer *player, gboolean paused)
     return;
 
   player->paused = paused;
+  swfmoz_player_update_audio (player);
   if (paused) {
     g_source_destroy (player->iterate_source);
     g_source_unref (player->iterate_source);

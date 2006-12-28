@@ -61,6 +61,7 @@ struct _SwfmozPlayer {
   /* state */
   gboolean		paused;			/* if the player acts */
   GSource *		iterate_source;		/* source used for iterating */
+  gpointer		audio;			/* audio playback object (or NULL) */
 };
 
 struct _SwfmozPlayerClass {
