@@ -126,12 +126,16 @@ swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
   
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), NULL);
 
-  if (player->player_initialized)
-    return NULL;
-  loader = swfmoz_loader_new (stream);
-  g_object_ref (loader);
-  swfdec_player_set_loader (player->player, loader);
-  player->player_initialized = TRUE;
+  if (stream->notifyData) {
+    loader = SWFDEC_LOADER (stream->notifyData);
+    swfmoz_loader_set_stream (SWFMOZ_LOADER (loader), player->instance, stream);
+  } else {
+    if (player->player_initialized)
+      return NULL;
+    loader = swfmoz_loader_new (player->instance, stream);
+    swfdec_player_set_loader (player->player, loader);
+    player->player_initialized = TRUE;
+  }
   return loader;
 }
 

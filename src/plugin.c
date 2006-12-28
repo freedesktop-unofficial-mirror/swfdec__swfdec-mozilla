@@ -40,6 +40,14 @@ NPNetscapeFuncs mozilla_funcs;
 /*** forward declarations for plugin API ***/
 
 void
+plugin_get_url_notify (NPP instance, const char *url,
+    const char *target, void *data)
+{
+  CallNPN_GetURLNotifyProc (mozilla_funcs.geturlnotify, instance, 
+      url, target, data);
+}
+
+void
 plugin_invalidate_rect (NPP instance, NPRect *rect)
 {
   CallNPN_InvalidateRectProc (mozilla_funcs.invalidaterect, instance, rect);
@@ -139,6 +147,7 @@ plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream,
   loader = swfmoz_player_add_stream (instance->pdata, stream);
   if (loader == NULL)
     return NPERR_INVALID_URL;
+  g_object_ref (loader);
   stream->pdata = loader;
   if (stype)
     *stype = NP_NORMAL;
@@ -211,8 +220,14 @@ plugin_handle_event (NPP instance, void *eventp)
     return FALSE;
 
   /* FIXME: implement */
-  g_assert_not_reached ();
   return FALSE;
+}
+
+static void
+plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyData)
+{
+  /* FIXME: need a way to tell about errors here */
+  g_object_unref (notifyData);
 }
 
 NPError
@@ -255,10 +270,10 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
   plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
   plugin_funcs->event = NewNPP_HandleEventProc (plugin_handle_event);
+  plugin_funcs->urlnotify = NewNPP_URLNotifyProc (plugin_url_notify);
 #if 0
   plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->print = NULL;
-  plugin_funcs->urlnotify = NULL;
   plugin_funcs->javaClass = NULL;
   plugin_funcs->getvalue = NULL;
   plugin_funcs->setvalue = NewNPP_SetValueProc (plugin_set_value);
@@ -270,6 +285,7 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 NPError
 NP_Shutdown (void)
 {
+  g_printerr ("You should not see this text until you've closed your browser\n");
   return NPERR_NO_ERROR;
 }
 

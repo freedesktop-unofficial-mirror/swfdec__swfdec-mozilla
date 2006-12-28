@@ -20,8 +20,15 @@
 #ifndef _SWFMOZ_PLUGIN_H_
 #define _SWFMOZ_PLUGIN_H_
 
+#include <npapi.h>
+
 G_BEGIN_DECLS
 
+
+void	plugin_get_url_notify		(NPP		instance,
+					 const char *	url,
+					 const char *	target,
+					 void *		data);
 
 void	plugin_invalidate_rect		(NPP		instance,
 					 NPRect *	rect);

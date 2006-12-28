@@ -40,6 +40,7 @@ struct _SwfmozLoader
 {
   SwfdecLoader		parent;
 
+  NPP			instance;	/* instance we belong to */
   NPStream *		stream;		/* stream we do */
 };
 
@@ -50,7 +51,11 @@ struct _SwfmozLoaderClass
 
 GType		swfmoz_loader_get_type   	(void);
 
-SwfdecLoader *	swfmoz_loader_new	  	(NPStream *   stream);
+SwfdecLoader *	swfmoz_loader_new	  	(NPP		instance,
+						 NPStream *	stream);
+void		swfmoz_loader_set_stream	(SwfmozLoader *	loader,
+						 NPP		instance,
+						 NPStream *	stream);
 					 
 
 G_END_DECLS

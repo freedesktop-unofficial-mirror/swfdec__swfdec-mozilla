@@ -22,6 +22,17 @@
 #endif
 
 #include "swfmoz_loader.h"
+#include "plugin.h"
+
+/* Note about refcounting:
+ * Refcounts to a SwfdecLoader are held by:
+ * - The SwfdecPlayer (until he releases it which can be at any point in time)
+ * - The NPStream (released in NPP_DestroyStream)
+ * - if the stream was created using NPN_Get/PostURLNotify, the notifyData 
+ *   holds a reference. This reference is released by NPP_URLNotify
+ * It's necessary to keep this many references since there's a lot of possible
+ * orders in which these events happen.
+ */
 
 G_DEFINE_TYPE (SwfmozLoader, swfmoz_loader, SWFDEC_TYPE_LOADER)
 
@@ -36,12 +47,14 @@ swfmoz_loader_dispose (GObject *object)
 static SwfdecLoader *
 swfmoz_loader_load (SwfdecLoader *loader, const char *url)
 {
-  //SwfmozLoader *moz = SWFMOZ_LOADER (loader);
-  //SwfdecLoader *new;
+  SwfmozLoader *moz = SWFMOZ_LOADER (loader);
+  SwfdecLoader *new;
 
-  /* FIXME! */
-  g_assert_not_reached ();
-  return NULL;
+  /* FIXME: add guards so not every URL is loaded */
+  new = g_object_new (SWFMOZ_TYPE_LOADER, NULL);
+  g_object_ref (new);
+  plugin_get_url_notify (moz->instance, url, NULL, new);
+  return new;
 }
 
 static void
@@ -60,15 +73,29 @@ swfmoz_loader_init (SwfmozLoader *slow_loader)
 {
 }
 
+void
+swfmoz_loader_set_stream (SwfmozLoader *loader, NPP instance, NPStream *stream)
+{
+  g_return_if_fail (SWFMOZ_IS_LOADER (loader));
+  g_return_if_fail (loader->stream == NULL);
+  g_return_if_fail (instance != NULL);
+  g_return_if_fail (stream != NULL);
+
+  g_printerr ("Loading stream: %s\n", stream->url);
+  SWFDEC_LOADER (loader)->url = g_strdup (stream->url);
+  loader->instance = instance;
+  loader->stream = stream;
+}
+
 SwfdecLoader *
-swfmoz_loader_new (NPStream *stream)
+swfmoz_loader_new (NPP instance, NPStream *stream)
 {
   SwfmozLoader *ret;
 
   g_return_val_if_fail (stream != NULL, NULL);
 
   ret = g_object_new (SWFMOZ_TYPE_LOADER, NULL);
-  ret->stream = stream;
+  swfmoz_loader_set_stream (ret, instance, stream);
 
   return SWFDEC_LOADER (ret);
 }
