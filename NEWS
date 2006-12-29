@@ -1,0 +1,16 @@
+
+ 0.4.0 ("They killed Kenny")
+
+This is the first standalone release of the Swfdec Mozilla plugin.
+The plugin has been completely rewritten. Major changes to the 0.3
+version:
+- The plugin is in-process for various reasons (This is important: 
+  If the plugin crashes, your whole browser will crash)
+- The plugin no longer uses GStreamer
+- Audio is handled via ALSA (feel free to write plugins for other 
+  audio outputs)
+- Flash files will not be played by default, instead you will see
+  a shaded pause sign (right-clicking toggles pause)
+
+For now, this plugin will directly follow the swfdec library's 
+version until its API somewhat stabilizes.
