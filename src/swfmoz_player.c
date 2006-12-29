@@ -80,6 +80,13 @@ swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y,
 }
 
 static void
+swfmoz_player_launch (SwfdecPlayer *swfplayer, const char *url, const char *target,
+    SwfmozPlayer *player)
+{
+  plugin_get_url (player->instance, url, target);
+}
+
+static void
 swfmoz_player_dispose (GObject *object)
 {
   SwfmozPlayer *player = SWFMOZ_PLAYER (object);
@@ -88,6 +95,7 @@ swfmoz_player_dispose (GObject *object)
 
   /* the player might be refed elsewhere */
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_redraw, player);
+  g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_launch, player);
   g_object_unref (player->player);
   if (player->target) {
     cairo_destroy (player->target);
@@ -119,6 +127,7 @@ swfmoz_player_init (SwfmozPlayer *player)
 {
   player->player = swfdec_player_new ();
   g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
+  g_signal_connect (player->player, "launch", G_CALLBACK (swfmoz_player_launch), player);
   player->context = g_main_context_default ();
   player->paused = TRUE;
 }
