@@ -6,6 +6,7 @@ CVS
 
 Makefile
 Makefile.in
+swfdec_playback.c
 *.o
 *.la
 *.lo

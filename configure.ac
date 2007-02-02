@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec-mozilla,0.4.1)
+AC_INIT(swfdec-mozilla,0.4.1.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -57,7 +57,7 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-SWFDEC_REQUIRES=0.4.1
+SWFDEC_REQUIRES=0.4.1.1
 PKG_CHECK_MODULES(SWFDEC, swfdec-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
   AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR, which is required for build])
@@ -65,13 +65,40 @@ fi
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
-PKG_CHECK_MODULES(ALSA, alsa >= 1.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-AC_SUBST(ALSA_LIBS)
-AC_SUBST(ALSA_CFLAGS)
-if test "$HAVE_ALSA" = "no"; then
-  AC_MSG_WARN([cannot find alsa, audio output will be disabled])
+dnl
+dnl audio backend
+dnl
+AC_ARG_WITH(audio,
+            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
+                            [audio backend to use])],,
+	    [with_audio=auto])
+
+AUDIO_TYPE=
+if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
+  PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
+  if test "$AUDIO_TYPE" = "alsa"; then
+    with_audio=alsa
+  else
+    AC_MSG_WARN([no alsa audio support])
+  fi
+  AUDIO_CFLAGS=$ALSA_CFLAGS
+  AUDIO_LIBS=$ALSA_LIBS
 fi
-AM_CONDITIONAL(WITH_ALSA,[test "$HAVE_ALSA" != "no"])
+
+if test "$with_audio" = "auto" -o "$with_audio" = "none"; then
+  AUDIO_CFLAGS=
+  AUDIO_LIBS=
+  AUDIO_TYPE=none
+fi
+
+if test "x$AUDIO_TYPE" = "x"; then
+  AC_MSG_ERROR([desired audio support could not be used])
+else
+  AC_MSG_NOTICE([audio backend: $AUDIO_TYPE])
+fi
+AC_SUBST(AUDIO_LIBS)
+AC_SUBST(AUDIO_CFLAGS)
+AC_SUBST(AUDIO_TYPE)
 
 PKG_CHECK_MODULES(CAIRO, cairo >= 1.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
