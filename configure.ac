@@ -60,7 +60,7 @@ dnl ====================================
 SWFDEC_REQUIRES=0.4.1.1
 PKG_CHECK_MODULES(SWFDEC, swfdec-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
-  AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR, which is required for build])
+  AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR $SWFDEC_REQUIRES, which is required for build])
 fi
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
