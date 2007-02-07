@@ -65,6 +65,11 @@ fi
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, , AC_MSG_ERROR([cannot find GTK+-2.0 >= 2.8.0]))
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_CFLAGS)
+
+
 dnl
 dnl audio backend
 dnl

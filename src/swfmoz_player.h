@@ -20,6 +20,7 @@
 #ifndef _SWFMOZ_PLAYER_H_
 #define _SWFMOZ_PLAYER_H_
 
+#include <gtk/gtk.h>
 #include <libswfdec/swfdec.h>
 #include <npapi.h>
 
@@ -60,8 +61,12 @@ struct _SwfmozPlayer {
 
   /* state */
   gboolean		paused;			/* if the player acts */
+  gboolean		audio_enabled;		/* TRUE if audio should play */
   GSource *		iterate_source;		/* source used for iterating */
   gpointer		audio;			/* audio playback object (or NULL) */
+
+  /* Gtk stuff */
+  GtkMenu *		menu;			/* right-click menu */
 };
 
 struct _SwfmozPlayerClass {
@@ -93,6 +98,9 @@ gboolean	swfmoz_player_mouse_changed	(SwfmozPlayer *		player,
 gboolean	swfmoz_player_get_paused	(SwfmozPlayer *		player);
 void		swfmoz_player_set_paused	(SwfmozPlayer *		player,
 						 gboolean		paused);
+gboolean	swfmoz_player_get_audio_enabled	(SwfmozPlayer *		player);
+void		swfmoz_player_set_audio_enabled	(SwfmozPlayer *		player,
+						 gboolean		enable);
 					 
 
 G_END_DECLS
