@@ -28,6 +28,8 @@
 #include "swfdec_source.h"
 #include "swfmoz_loader.h"
 
+#include "swfmoz_dialog.h"
+
 /*** menu ***/
 
 static void
@@ -99,6 +101,16 @@ swfmoz_player_popup_menu (SwfmozPlayer *player)
 	G_CALLBACK (swfmoz_player_menu_notify_audio), item);
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), 
 	swfmoz_player_get_audio_enabled (player));
+    gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
+
+    item = gtk_separator_menu_item_new ();
+    gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
+
+    item = gtk_image_menu_item_new_from_stock (GTK_STOCK_PROPERTIES, NULL);
+    g_signal_connect_swapped (item, "activate", 
+	G_CALLBACK (swfmoz_dialog_show), player);
     gtk_widget_show (item);
     gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
 
@@ -244,6 +256,10 @@ swfmoz_player_dispose (GObject *object)
     gtk_widget_destroy (GTK_WIDGET (player->menu));
     player->menu = NULL;
   }
+  if (player->loaders) {
+    g_object_unref (player->loaders);
+    player->loaders = NULL;
+  }
 
   /* sanity checks */
   g_assert (player->audio == NULL);
@@ -277,6 +293,9 @@ swfmoz_player_init (SwfmozPlayer *player)
   player->context = g_main_context_default ();
   player->paused = TRUE;
   player->audio_enabled = TRUE;
+
+  player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
+      SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING));
 }
 
 SwfmozPlayer *
@@ -294,6 +313,7 @@ swfmoz_player_new (NPP instance, gboolean windowless)
 SwfdecLoader *
 swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
 {
+  GtkTreeIter iter;
   SwfdecLoader *loader;
   
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), NULL);
@@ -308,6 +328,13 @@ swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
     swfdec_player_set_loader (player->player, loader);
     player->player_initialized = TRUE;
   }
+  /* add loader to the list of loaders */
+  gtk_list_store_append (GTK_LIST_STORE (player->loaders), &iter);
+  gtk_list_store_set (GTK_LIST_STORE (player->loaders), &iter,
+    SWFMOZ_LOADER_COLUMN_LOADER, loader,
+    SWFMOZ_LOADER_COLUMN_URL, loader->url,
+    SWFMOZ_LOADER_COLUMN_TYPE, "Flash Movie",
+    -1);
   return loader;
 }
 

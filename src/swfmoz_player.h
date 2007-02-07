@@ -26,6 +26,12 @@
 
 G_BEGIN_DECLS
 
+enum {
+  SWFMOZ_LOADER_COLUMN_LOADER,
+  SWFMOZ_LOADER_COLUMN_URL,
+  SWFMOZ_LOADER_COLUMN_TYPE,
+  SWFMOZ_LOADER_N_COLUMNS
+};
 
 typedef struct _SwfmozPlayer SwfmozPlayer;
 typedef struct _SwfmozPlayerClass SwfmozPlayerClass;
@@ -67,6 +73,7 @@ struct _SwfmozPlayer {
 
   /* Gtk stuff */
   GtkMenu *		menu;			/* right-click menu */
+  GtkTreeModel *	loaders;		/* loaders used in this players */
 };
 
 struct _SwfmozPlayerClass {
