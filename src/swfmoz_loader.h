@@ -42,6 +42,8 @@ struct _SwfmozLoader
 
   NPP			instance;	/* instance we belong to */
   NPStream *		stream;		/* stream we do */
+
+  char *		cache_file;	/* where the file is cached */
 };
 
 struct _SwfmozLoaderClass

@@ -155,7 +155,7 @@ plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream,
   g_object_ref (loader);
   stream->pdata = loader;
   if (stype)
-    *stype = NP_NORMAL;
+    *stype = NP_ASFILE;
   return NPERR_NO_ERROR;
 }
 
@@ -199,6 +199,21 @@ plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buf
   new->data = g_memdup (buffer, len);
   swfdec_loader_push (stream->pdata, new);
   return len;
+}
+
+static void
+plugin_stream_as_file (NPP instance, NPStream *stream, const char *filename)
+{
+  SwfmozLoader *loader;
+
+  if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
+    return;
+  if (!SWFMOZ_IS_LOADER (stream->pdata))
+    return;
+
+  loader = stream->pdata;
+  g_free (loader->cache_file);
+  loader->cache_file = g_strdup (filename);
 }
 
 static NPError 
@@ -273,11 +288,11 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
       NewNPP_DestroyStreamProc (plugin_destroy_stream);
   plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
+  plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
   plugin_funcs->event = NewNPP_HandleEventProc (plugin_handle_event);
   plugin_funcs->urlnotify = NewNPP_URLNotifyProc (plugin_url_notify);
 #if 0
-  plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
   plugin_funcs->print = NULL;
   plugin_funcs->javaClass = NULL;
   plugin_funcs->getvalue = NULL;

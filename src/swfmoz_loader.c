@@ -39,7 +39,9 @@ G_DEFINE_TYPE (SwfmozLoader, swfmoz_loader, SWFDEC_TYPE_LOADER)
 static void
 swfmoz_loader_dispose (GObject *object)
 {
-  //SwfmozLoader *loader = SWFMOZ_LOADER (object);
+  SwfmozLoader *loader = SWFMOZ_LOADER (object);
+
+  g_free (loader->cache_file);
 
   G_OBJECT_CLASS (swfmoz_loader_parent_class)->dispose (object);
 }
