@@ -179,7 +179,8 @@ swfmoz_dialog_init (SwfmozDialog *dialog)
 
   gtk_dialog_add_button (gtkdialog, GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
-  g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_destroy), NULL);
+  g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_hide), NULL);
+  g_signal_connect (dialog, "delete-event", G_CALLBACK (gtk_widget_hide_on_delete), NULL);
   gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 400);
 }
 
@@ -212,7 +213,7 @@ swfmoz_dialog_show (SwfmozPlayer *player)
   dialog = g_object_get_qdata (G_OBJECT (player), quark);
   if (dialog == NULL) {
     dialog = g_object_new (SWFMOZ_TYPE_DIALOG, NULL);
-    g_object_set_qdata (G_OBJECT (player), quark, dialog);
+    g_object_set_qdata_full (G_OBJECT (player), quark, dialog, (GDestroyNotify) gtk_widget_destroy);
     swfmoz_dialog_set_player (dialog, player);
   }
   gtk_window_present (GTK_WINDOW (dialog));
