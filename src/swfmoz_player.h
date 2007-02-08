@@ -51,7 +51,7 @@ struct _SwfmozPlayer {
   GMainContext *	context;		/* the main context run by the thread */
 
   SwfdecPlayer *	player;			/* the player instance */
-  gboolean		player_initialized;	/* TRUE if we've set our initial stream */
+  SwfdecLoader *	initial;		/* loader that spawned this player or NULL if none yet */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   cairo_t *		target;			/* what we draw to */
   cairo_t *		intermediate;		/* intermediate target to avoid flicker */
@@ -108,6 +108,7 @@ void		swfmoz_player_set_paused	(SwfmozPlayer *		player,
 gboolean	swfmoz_player_get_audio_enabled	(SwfmozPlayer *		player);
 void		swfmoz_player_set_audio_enabled	(SwfmozPlayer *		player,
 						 gboolean		enable);
+char *		swfmoz_player_get_filename	(SwfmozPlayer *		player);
 					 
 
 G_END_DECLS

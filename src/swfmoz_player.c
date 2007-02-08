@@ -252,6 +252,10 @@ swfmoz_player_dispose (GObject *object)
     g_source_unref (player->repaint_source);
     player->repaint_source = NULL;
   }
+  if (player->initial) {
+    g_object_unref (player->initial);
+    player->initial = NULL;
+  }
   if (player->menu) {
     gtk_widget_destroy (GTK_WIDGET (player->menu));
     player->menu = NULL;
@@ -322,11 +326,12 @@ swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
     loader = SWFDEC_LOADER (stream->notifyData);
     swfmoz_loader_set_stream (SWFMOZ_LOADER (loader), player->instance, stream);
   } else {
-    if (player->player_initialized)
+    if (player->initial)
       return NULL;
     loader = swfmoz_loader_new (player->instance, stream);
     swfdec_player_set_loader (player->player, loader);
-    player->player_initialized = TRUE;
+    player->initial = loader;
+    g_object_ref (loader);
   }
   /* add loader to the list of loaders */
   gtk_list_store_append (GTK_LIST_STORE (player->loaders), &iter);
@@ -512,3 +517,13 @@ swfmoz_player_set_audio_enabled (SwfmozPlayer *player, gboolean enable)
   g_object_notify (G_OBJECT (player), "audio-enabled");
 }
 
+char *
+swfmoz_player_get_filename (SwfmozPlayer *player)
+{
+  g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), NULL);
+
+  if (player->initial == NULL)
+    return g_strdup ("unknown.swf");
+
+  return swfdec_loader_get_filename (player->initial);
+}
