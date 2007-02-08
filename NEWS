@@ -1,4 +1,13 @@
 
+ 0.4.2 ("Kill animals, or else they'll die!")
+
+This release adds a shiny new right-click menu. It also requires Gtk 
+now. And this Gtk shinyness allows:
+- Disable audio during playback
+- Shiny new properties dialog that allows downloading Flash files.
+- Add a "no sound" backend for people that don't have ALSA.
+- Fix bug that made the	image not redraw sometimes
+
  0.4.1 ("Nothing to see here")
 
 This is just an update of the API to swfdec-0.4.1.
