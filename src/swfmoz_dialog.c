@@ -188,6 +188,7 @@ static void
 swfmoz_dialog_set_player (SwfmozDialog *dialog, SwfmozPlayer *player)
 {
   GtkWidget *notebook;
+  char *s, *t;
 
   g_object_ref (player);
   dialog->player = player;
@@ -198,6 +199,13 @@ swfmoz_dialog_set_player (SwfmozDialog *dialog, SwfmozPlayer *player)
       gtk_label_new ("Media"));
   gtk_widget_show_all (notebook);
   gtk_container_add (GTK_CONTAINER (GTK_DIALOG (dialog)->vbox), notebook);
+  s = swfmoz_player_get_filename (player);
+  t = g_filename_to_utf8 (s, -1, NULL, NULL, NULL);
+  g_free (s);
+  if (t) {
+    gtk_window_set_title (GTK_WINDOW (dialog), t);
+    g_free (t);
+  }
 }
 
 void
