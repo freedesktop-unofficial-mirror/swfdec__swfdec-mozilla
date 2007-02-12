@@ -429,6 +429,7 @@ swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gbo
 	  return FALSE;
 	swfmoz_player_set_paused (player, FALSE);
       } else {
+	player->mouse_down = down;
 	swfdec_player_handle_mouse (player->player, x, y, down ? 1 : 0);
       }
       return TRUE;
@@ -439,6 +440,17 @@ swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gbo
       }
     default:
       break;
+  }
+  return FALSE;
+}
+
+gboolean
+swfmoz_player_mouse_moved (SwfmozPlayer *player, int x, int y)
+{
+  g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
+
+  if (!swfmoz_player_get_paused (player)) {
+    swfdec_player_handle_mouse (player->player, x, y, player->mouse_down ? 1 : 0);
   }
   return FALSE;
 }

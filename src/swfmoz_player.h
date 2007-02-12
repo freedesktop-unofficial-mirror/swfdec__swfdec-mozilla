@@ -57,6 +57,7 @@ struct _SwfmozPlayer {
   cairo_t *		intermediate;		/* intermediate target to avoid flicker */
   unsigned int		target_width;		/* width of target */
   unsigned int		target_height;		/* height of target */
+  gboolean		mouse_down;		/* saved state for the mouse */
 
   /* for windowed operation */
   GSource *		repaint_source;		/* set when repaint is necessary */
@@ -101,6 +102,9 @@ gboolean	swfmoz_player_mouse_changed	(SwfmozPlayer *		player,
 						 int			x,
 						 int			y,
 						 gboolean		down);
+gboolean	swfmoz_player_mouse_moved	(SwfmozPlayer *		player,
+						 int			x,
+						 int			y);
 
 gboolean	swfmoz_player_get_paused	(SwfmozPlayer *		player);
 void		swfmoz_player_set_paused	(SwfmozPlayer *		player,

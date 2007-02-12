@@ -103,6 +103,8 @@ typedef struct {
   Window	window;
 } SwfmozX11Data;
 
+static GQuark quark = 0;
+
 static void
 swfmoz_x11_data_free (SwfmozX11Data *data)
 {
@@ -119,13 +121,18 @@ swfmoz_x11_data_free (SwfmozX11Data *data)
 static void
 swfmoz_x11_data_set (SwfmozPlayer *player, SwfmozX11Data *data)
 {
-  static GQuark quark = 0;
-
   if (quark == 0)
     quark = g_quark_from_static_string ("swfmoz-x11-data");
 
   g_object_set_qdata_full (G_OBJECT (player), quark, data,
       (GDestroyNotify) swfmoz_x11_data_free);
+}
+
+static SwfmozX11Data *
+swfmoz_x11_data_get (SwfmozPlayer *player)
+{
+  g_assert (quark != 0);
+  return g_object_get_qdata (G_OBJECT (player), quark);
 }
 
 gboolean
@@ -145,6 +152,17 @@ plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
 	XButtonEvent *button = (XButtonEvent *) event;
 	swfmoz_player_mouse_changed (player, button->button, button->x, 
 	    button->y, event->type == ButtonPress);
+	break;
+      }
+    case MotionNotify:
+      {
+	Window root, child;
+	int rootx, rooty, winx, winy;
+	guint xmask;
+	SwfmozX11Data *data = swfmoz_x11_data_get (player);
+	XQueryPointer (data->display, data->window, &root, &child, 
+	    &rootx, &rooty, &winx, &winy, &xmask);
+	swfmoz_player_mouse_moved (player, winx, winy);
 	break;
       }
     default:
@@ -173,7 +191,7 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, const char *display_name,
       0, 0, 0);
   XMapWindow (data->display, data->window);
   XSelectInput (data->display, data->window, ExposureMask | ButtonPressMask | 
-      ButtonReleaseMask);
+      ButtonReleaseMask | PointerMotionMask | PointerMotionHintMask);
 
   XGetWindowAttributes (data->display, data->window, &attr);
   surface = cairo_xlib_surface_create (data->display, data->window,
