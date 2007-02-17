@@ -264,6 +264,7 @@ swfmoz_player_dispose (GObject *object)
     g_object_unref (player->loaders);
     player->loaders = NULL;
   }
+  g_free (player->variables);
 
   /* sanity checks */
   g_assert (player->audio == NULL);
@@ -329,7 +330,7 @@ swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
     if (player->initial)
       return NULL;
     loader = swfmoz_loader_new (player->instance, stream);
-    swfdec_player_set_loader (player->player, loader);
+    swfdec_player_set_loader_with_variables (player->player, loader, player->variables);
     player->initial = loader;
     g_object_ref (loader);
   }
@@ -539,3 +540,15 @@ swfmoz_player_get_filename (SwfmozPlayer *player)
 
   return swfdec_loader_get_filename (player->initial);
 }
+
+void
+swfmoz_player_set_variables (SwfmozPlayer *player, const char *variables)
+{
+  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
+  g_return_if_fail (player->initial == NULL);
+  g_return_if_fail (variables != NULL);
+
+  g_free (player->variables);
+  player->variables = g_strdup (variables);
+}
+

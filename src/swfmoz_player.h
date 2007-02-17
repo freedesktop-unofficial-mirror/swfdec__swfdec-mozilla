@@ -52,6 +52,7 @@ struct _SwfmozPlayer {
 
   SwfdecPlayer *	player;			/* the player instance */
   SwfdecLoader *	initial;		/* loader that spawned this player or NULL if none yet */
+  char *		variables;		/* variables to pass to initial loader */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   cairo_t *		target;			/* what we draw to */
   cairo_t *		intermediate;		/* intermediate target to avoid flicker */
@@ -113,6 +114,8 @@ gboolean	swfmoz_player_get_audio_enabled	(SwfmozPlayer *		player);
 void		swfmoz_player_set_audio_enabled	(SwfmozPlayer *		player,
 						 gboolean		enable);
 char *		swfmoz_player_get_filename	(SwfmozPlayer *		player);
+void		swfmoz_player_set_variables	(SwfmozPlayer *		player,
+						 const char *		variables);
 					 
 
 G_END_DECLS

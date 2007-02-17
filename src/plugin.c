@@ -1,7 +1,7 @@
 /* Swfdec Mozilla Plugin
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -99,6 +99,8 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     uint16_t mode, int16_t argc, char *argn[], char *argv[],
     NPSavedData * saved)
 {
+  int i;
+
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
@@ -125,8 +127,17 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   /* Init functioncalling (even g_type_init) gets postponed until we know we
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
-
   instance->pdata = swfmoz_player_new (instance, FALSE);
+
+  /* set the properties we support */
+  for (i = 0; i < argc; i++) {
+    if (g_ascii_strcasecmp (argn[i], "flashvars")) {
+      swfmoz_player_set_variables (instance->pdata, argv[i]);
+    } else {
+      g_printerr ("Unsupported movie property %s", argn[i]);
+    }
+  }
+
   return NPERR_NO_ERROR;
 }
 
