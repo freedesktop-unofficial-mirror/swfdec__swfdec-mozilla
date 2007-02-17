@@ -131,10 +131,14 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 
   /* set the properties we support */
   for (i = 0; i < argc; i++) {
-    if (g_ascii_strcasecmp (argn[i], "flashvars")) {
-      swfmoz_player_set_variables (instance->pdata, argv[i]);
+    if (argn[i] == NULL)
+      continue;
+    if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
+      if (argv[i])
+	swfmoz_player_set_variables (instance->pdata, argv[i]);
     } else {
-      g_printerr ("Unsupported movie property %s", argn[i]);
+      g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
+	  argn[i], argv[i] ? argv[i] : "(null)");
     }
   }
 
