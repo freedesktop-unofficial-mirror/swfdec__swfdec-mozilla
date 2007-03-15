@@ -100,6 +100,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     NPSavedData * saved)
 {
   int i;
+  char *variables = NULL;
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -135,12 +136,20 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       continue;
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
-	swfmoz_player_set_variables (instance->pdata, argv[i]);
+	variables = argv[i];
+    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
+      if (argv[i] && variables == NULL) {
+	char *question_mark = strchr (argv[i], '?');
+	if (question_mark)
+	  variables = question_mark + 1;
+      }
     } else {
       g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
 	  argn[i], argv[i] ? argv[i] : "(null)");
     }
   }
+  if (variables)
+    swfmoz_player_set_variables (instance->pdata, variables);
 
   return NPERR_NO_ERROR;
 }
@@ -261,8 +270,14 @@ plugin_handle_event (NPP instance, void *eventp)
 static void
 plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-  /* FIXME: need a way to tell about errors here */
-  g_object_unref (notifyData);
+  SwfdecLoader *loader = SWFDEC_LOADER (notifyData);
+
+  if (reason == NPRES_NETWORK_ERR) {
+    swfdec_loader_error (loader, "Network error");
+  } else if (reason == NPRES_USER_BREAK) {
+    swfdec_loader_error (loader, "User interrupt");
+  }
+  g_object_unref (loader);
 }
 
 NPError
