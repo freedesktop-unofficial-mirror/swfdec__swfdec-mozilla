@@ -106,6 +106,11 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
   
   gtk_tree_model_get (model, &iter, SWFMOZ_LOADER_COLUMN_LOADER, &loader, -1);
   g_object_unref (loader);
+  if (SWFDEC_LOADER (loader)->error != NULL) {
+    /* FIXME: make it impossible that this happens by disabling this button for 
+     * error cases. But that requires monitoring the selection, and I'm lazy */
+    return;
+  }
   if (loader->cache_file == NULL) {
     /* FIXME: redownload the file */
     g_printerr ("The file \"%s\" is not available locally\n", 
@@ -144,15 +149,37 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   dialog->media = widget = gtk_tree_view_new_with_model (dialog->player->loaders);
 
   renderer = gtk_cell_renderer_text_new ();
-  column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
-    "text", SWFMOZ_LOADER_COLUMN_URL, NULL);
+  column = gtk_tree_view_column_new_with_attributes ("Type", renderer,
+    "text", SWFMOZ_LOADER_COLUMN_NAME, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_URL);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_NAME);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes ("Type", renderer,
     "text", SWFMOZ_LOADER_COLUMN_TYPE, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_TYPE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Done", renderer,
+    "active", SWFMOZ_LOADER_COLUMN_EOF, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_EOF);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Error", renderer,
+    "active", SWFMOZ_LOADER_COLUMN_ERROR, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_ERROR);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  g_object_set (renderer, "width-chars", 15, NULL);
+  column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
+    "text", SWFMOZ_LOADER_COLUMN_URL, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_URL);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);

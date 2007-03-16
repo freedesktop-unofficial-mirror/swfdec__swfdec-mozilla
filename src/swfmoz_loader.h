@@ -59,6 +59,8 @@ void		swfmoz_loader_set_stream	(SwfmozLoader *	loader,
 						 NPP		instance,
 						 NPStream *	stream);
 					 
+const char *	swfmoz_loader_get_data_type_string
+						(SwfdecLoader *	loader);
 
 G_END_DECLS
 #endif

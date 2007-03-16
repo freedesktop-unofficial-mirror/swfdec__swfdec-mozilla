@@ -101,3 +101,24 @@ swfmoz_loader_new (NPP instance, NPStream *stream)
 
   return SWFDEC_LOADER (ret);
 }
+
+const char *
+swfmoz_loader_get_data_type_string (SwfdecLoader *loader)
+{
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
+
+  switch (swfdec_loader_get_data_type (loader)) {
+    case SWFDEC_LOADER_DATA_UNKNOWN:
+      return "Unknown Data";
+    case SWFDEC_LOADER_DATA_SWF:
+      /* FIXME: what's a useful name for flash movies? */
+      return "Flash Movie";
+    case SWFDEC_LOADER_DATA_FLV:
+      return "Flash Video";
+    default:
+      g_printerr ("unknown data type %u\n", 
+	  (guint) swfdec_loader_get_data_type (loader));
+      return "You should never read this";
+  }
+}
+
