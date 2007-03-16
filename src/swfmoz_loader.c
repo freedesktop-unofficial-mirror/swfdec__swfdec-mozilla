@@ -115,6 +115,10 @@ swfmoz_loader_get_data_type_string (SwfdecLoader *loader)
       return "Flash Movie";
     case SWFDEC_LOADER_DATA_FLV:
       return "Flash Video";
+    case SWFDEC_LOADER_DATA_TEXT:
+      return "Text";
+    case SWFDEC_LOADER_DATA_XML:
+      return "XML Data";
     default:
       g_printerr ("unknown data type %u\n", 
 	  (guint) swfdec_loader_get_data_type (loader));
