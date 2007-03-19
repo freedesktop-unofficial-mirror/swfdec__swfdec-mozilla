@@ -130,6 +130,11 @@ if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_ERROR([Mozilla not found. Mozilla/Netscape plugin will not be built.])
 fi
 
+dnl define standard mozilla defines
+dnl this needs updates if we want to compile on Windows or OS X
+AC_DEFINE_UNQUOTED(XP_UNIX, 1, [Define the Mozilla environment])
+AC_DEFINE_UNQUOTED(MOZ_X11, 1, [Define the Mozilla windowing])
+
 AC_SUBST(GLOBAL_CFLAGS)
 
 if test "x${prefix}" = "xNONE"; then
