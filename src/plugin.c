@@ -26,7 +26,6 @@
 #include <string.h>
 #include <cairo-xlib.h>
 
-#include <mozilla-config.h>
 #include <npapi.h>
 #include <npupp.h>
 
