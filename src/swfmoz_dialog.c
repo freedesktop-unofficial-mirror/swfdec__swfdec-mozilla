@@ -162,11 +162,11 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_TYPE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
-  renderer = gtk_cell_renderer_toggle_new ();
+  renderer = gtk_cell_renderer_progress_new ();
   column = gtk_tree_view_column_new_with_attributes ("Done", renderer,
-    "active", SWFMOZ_LOADER_COLUMN_EOF, NULL);
+    "value", SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_EOF);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_PERCENT_LOADED);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   renderer = gtk_cell_renderer_toggle_new ();

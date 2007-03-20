@@ -301,7 +301,7 @@ swfmoz_player_init (SwfmozPlayer *player)
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
       SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING, 
-      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN));
+      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_UINT));
 }
 
 SwfmozPlayer *
@@ -320,7 +320,14 @@ static void
 swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoader *loader)
 {
   char *filename = swfdec_loader_get_filename (loader);
+  guint percent;
 
+  percent = swfdec_loader_get_size (loader);
+  if (percent) {
+    percent = 100 * swfdec_loader_get_loaded (loader) / percent;
+  } else {
+    percent = loader->eof ? 100 : 50;
+  }
   gtk_list_store_set (store, iter,
     SWFMOZ_LOADER_COLUMN_LOADER, loader,
     SWFMOZ_LOADER_COLUMN_NAME, filename,
@@ -328,6 +335,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     SWFMOZ_LOADER_COLUMN_EOF, loader->eof,
     SWFMOZ_LOADER_COLUMN_ERROR, loader->error != NULL,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
+    SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, percent,
     -1);
   g_free (filename);
 }
