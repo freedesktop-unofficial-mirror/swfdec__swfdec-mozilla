@@ -149,7 +149,7 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   dialog->media = widget = gtk_tree_view_new_with_model (dialog->player->loaders);
 
   renderer = gtk_cell_renderer_text_new ();
-  column = gtk_tree_view_column_new_with_attributes ("Type", renderer,
+  column = gtk_tree_view_column_new_with_attributes ("Name", renderer,
     "text", SWFMOZ_LOADER_COLUMN_NAME, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_NAME);
