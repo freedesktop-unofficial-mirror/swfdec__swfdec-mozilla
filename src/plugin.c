@@ -160,7 +160,7 @@ plugin_destroy (NPP instance, NPSavedData **save)
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  g_object_unref (instance->pdata);
+  swfmoz_player_remove (instance->pdata);
   return NPERR_NO_ERROR;
 }
 

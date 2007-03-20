@@ -89,6 +89,7 @@ GType		swfmoz_player_get_type   	(void);
 
 SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance,
 						 gboolean		windowless);
+void		swfmoz_player_remove		(SwfmozPlayer *		player);
 
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);

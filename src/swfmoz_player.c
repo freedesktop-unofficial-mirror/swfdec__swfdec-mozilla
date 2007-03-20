@@ -595,3 +595,16 @@ swfmoz_player_set_variables (SwfmozPlayer *player, const char *variables)
   player->variables = g_strdup (variables);
 }
 
+void
+swfmoz_player_remove (SwfmozPlayer *player)
+{
+  /* This function is called when the player is removed from screen.
+   * It may still be necessary to keep it around if dialogs are open.
+   */
+  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
+
+  swfmoz_player_set_paused (player, TRUE);
+  swfmoz_player_set_audio_enabled (player, FALSE);
+  g_object_unref (player);
+}
+
