@@ -87,6 +87,8 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPP instance, NPStream *stream)
   SWFDEC_LOADER (loader)->url = g_strdup (stream->url);
   loader->instance = instance;
   loader->stream = stream;
+  if (stream->end)
+    swfdec_loader_set_size (SWFDEC_LOADER (loader), stream->end);
 }
 
 SwfdecLoader *
