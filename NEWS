@@ -1,4 +1,14 @@
 
+ 0.4.3 ("Now this puny world will bow down to me!")
+
+This release includes some improvements to the properties dialog. It
+also causes important bugfixes:
+- Properly handle mouse movements
+- Fix a nasty memory leak that made the Flash not go away anymore if
+  the properties had been open.
+- Update API.
+Of course you can watch Youtube videos in Mozilla, too.
+
  0.4.2 ("Kill animals, or else they'll die!")
 
 This release adds a shiny new right-click menu. It also requires Gtk 
