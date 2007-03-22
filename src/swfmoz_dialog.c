@@ -36,7 +36,10 @@ swfmoz_dialog_dispose (GObject *object)
 {
   SwfmozDialog *dialog = SWFMOZ_DIALOG (object);
 
-  g_object_unref (dialog->player);
+  if (dialog->player) {
+    g_object_unref (dialog->player);
+    dialog->player = NULL;
+  }
 
   G_OBJECT_CLASS (swfmoz_dialog_parent_class)->dispose (object);
 }
@@ -177,7 +180,7 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   renderer = gtk_cell_renderer_text_new ();
-  g_object_set (renderer, "width-chars", 15, NULL);
+  g_object_set (renderer, "width-chars", 15, "editable", TRUE, NULL);
   column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
     "text", SWFMOZ_LOADER_COLUMN_URL, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
@@ -235,21 +238,44 @@ swfmoz_dialog_set_player (SwfmozDialog *dialog, SwfmozPlayer *player)
   }
 }
 
+static GQuark dialog_quark = 0;
 void
 swfmoz_dialog_show (SwfmozPlayer *player)
 {
   SwfmozDialog *dialog;
-  GQuark quark = 0;
 
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
 
-  if (quark == 0)
-    quark = g_quark_from_static_string ("swfmoz-dialog");
-  dialog = g_object_get_qdata (G_OBJECT (player), quark);
+  if (dialog_quark == 0)
+    dialog_quark = g_quark_from_static_string ("swfmoz-dialog");
+  dialog = g_object_get_qdata (G_OBJECT (player), dialog_quark);
   if (dialog == NULL) {
     dialog = g_object_new (SWFMOZ_TYPE_DIALOG, NULL);
-    g_object_set_qdata_full (G_OBJECT (player), quark, dialog, (GDestroyNotify) gtk_widget_destroy);
+    g_object_set_qdata_full (G_OBJECT (player), dialog_quark, 
+	dialog, (GDestroyNotify) gtk_widget_destroy);
     swfmoz_dialog_set_player (dialog, player);
   }
   gtk_window_present (GTK_WINDOW (dialog));
+}
+
+void
+swfmoz_dialog_remove (SwfmozPlayer *player)
+{
+  GtkWidget *dialog;
+
+  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
+
+  if (dialog_quark == 0)
+    return;
+  dialog = g_object_steal_qdata (G_OBJECT (player), dialog_quark);
+  if (dialog == NULL)
+    return;
+
+  if (GTK_WIDGET_VISIBLE (dialog)) {
+    g_signal_handlers_disconnect_by_func (dialog, gtk_widget_hide_on_delete, NULL);
+    g_signal_handlers_disconnect_by_func (dialog, gtk_widget_hide, NULL);
+    g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_destroy), NULL);
+  } else {
+    gtk_widget_destroy (dialog);
+  }
 }

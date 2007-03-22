@@ -613,6 +613,7 @@ swfmoz_player_remove (SwfmozPlayer *player)
 
   swfmoz_player_set_paused (player, TRUE);
   swfmoz_player_set_audio_enabled (player, FALSE);
+  swfmoz_dialog_remove (player);
   g_object_unref (player);
 }
 

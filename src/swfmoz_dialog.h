@@ -51,6 +51,7 @@ struct _SwfmozDialogClass {
 GType		swfmoz_dialog_get_type   	(void);
 
 void		swfmoz_dialog_show	  	(SwfmozPlayer *		player);
+void		swfmoz_dialog_remove		(SwfmozPlayer *		player);
 					 
 
 G_END_DECLS
