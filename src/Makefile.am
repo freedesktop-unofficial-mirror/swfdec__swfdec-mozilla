@@ -1,13 +1,3 @@
-
-
-# this workaround is needed or autotools don't generate the .deps/*.Plo files correctly
-swfdec_playback.c: swfdec_playback_$(AUDIO_TYPE).c Makefile
-	cmp -s $(srcdir)/swfdec_playback_$(AUDIO_TYPE).c swfdec_playback.c \
-	|| cp $(srcdir)/swfdec_playback_$(AUDIO_TYPE).c swfdec_playback.c
-
-BUILT_SOURCES = swfdec_playback.c
-CLEANFILES = swfdec_playback.c
-
 plugindir = $(libdir)/$(MOZILLA_DIR)/plugins
 plugin_LTLIBRARIES = libswfdecmozilla.la
 
@@ -20,8 +10,6 @@ libswfdecmozilla_la_LDFLAGS = \
 libswfdecmozilla_la_SOURCES = \
 	plugin.c \
 	plugin_x11.c \
-	swfdec_playback.c \
-	swfdec_source.c \
 	swfmoz_dialog.c \
 	swfmoz_loader.c \
 	swfmoz_player.c
@@ -29,13 +17,9 @@ libswfdecmozilla_la_SOURCES = \
 noinst_HEADERS = \
 	plugin.h \
 	plugin_x11.h \
-	swfdec_playback.h \
-	swfdec_source.h \
 	swfmoz_dialog.h \
 	swfmoz_loader.h \
 	swfmoz_player.h
 
 EXTRA_DIST = \
-	plugin.symbols \
-	swfdec_playback_alsa.c \
-	swfdec_playback_none.c
+	plugin.symbols

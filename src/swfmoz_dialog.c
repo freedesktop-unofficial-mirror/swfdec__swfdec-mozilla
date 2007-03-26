@@ -23,8 +23,6 @@
 
 #include "swfmoz_dialog.h"
 #include "plugin.h"
-#include "swfdec_playback.h"
-#include "swfdec_source.h"
 #include "swfmoz_loader.h"
 
 /*** SWFMOZ_DIALOG ***/

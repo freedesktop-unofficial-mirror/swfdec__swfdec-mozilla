@@ -22,10 +22,8 @@
 #endif
 
 #include <math.h>
-#include "swfmoz_player.h"
 #include "plugin.h"
-#include "swfdec_playback.h"
-#include "swfdec_source.h"
+#include "swfmoz_player.h"
 #include "swfmoz_loader.h"
 
 #include "swfmoz_dialog.h"
@@ -33,29 +31,33 @@
 /*** menu ***/
 
 static void
-swfmoz_player_menu_playing_toggled (GtkCheckMenuItem *item, SwfmozPlayer* player)
+swfmoz_player_menu_playing_toggled (GtkCheckMenuItem *item, SwfdecGtkPlayer* player)
 {
-  swfmoz_player_set_paused (player, !gtk_check_menu_item_get_active (item));
+  if (swfdec_gtk_player_get_playing (player) != gtk_check_menu_item_get_active (item))
+    swfdec_gtk_player_set_playing (player, gtk_check_menu_item_get_active (item));
 }
 
 static void
-swfmoz_player_menu_notify_playing (SwfmozPlayer *player, GParamSpec *pspec,
+swfmoz_player_menu_notify_playing (SwfdecGtkPlayer *player, GParamSpec *pspec,
     GtkCheckMenuItem *item)
 {
-  gtk_check_menu_item_set_active (item, !swfmoz_player_get_paused (player));
+  if (swfdec_gtk_player_get_playing (player) != gtk_check_menu_item_get_active (item))
+    gtk_check_menu_item_set_active (item, swfdec_gtk_player_get_playing (player));
 }
 
 static void
-swfmoz_player_menu_audio_toggled (GtkCheckMenuItem *item, SwfmozPlayer* player)
+swfmoz_player_menu_audio_toggled (GtkCheckMenuItem *item, SwfdecGtkPlayer* player)
 {
-  swfmoz_player_set_audio_enabled (player, gtk_check_menu_item_get_active (item));
+  if (swfdec_gtk_player_get_audio_enabled (player) != gtk_check_menu_item_get_active (item))
+    swfdec_gtk_player_set_audio_enabled (player, gtk_check_menu_item_get_active (item));
 }
 
 static void
-swfmoz_player_menu_notify_audio (SwfmozPlayer *player, GParamSpec *pspec,
+swfmoz_player_menu_notify_audio (SwfdecGtkPlayer *player, GParamSpec *pspec,
     GtkCheckMenuItem *item)
 {
-  gtk_check_menu_item_set_active (item, swfmoz_player_get_audio_enabled (player));
+  if (swfdec_gtk_player_get_audio_enabled (player) != gtk_check_menu_item_get_active (item))
+    gtk_check_menu_item_set_active (item, swfdec_gtk_player_get_audio_enabled (player));
 }
 
 static void
@@ -86,21 +88,21 @@ swfmoz_player_popup_menu (SwfmozPlayer *player)
     
     item = gtk_check_menu_item_new_with_mnemonic ("Playing");
     g_signal_connect (item, "toggled", 
-	G_CALLBACK (swfmoz_player_menu_playing_toggled), player);
-    g_signal_connect (player, "notify::playing",
+	G_CALLBACK (swfmoz_player_menu_playing_toggled), player->player);
+    g_signal_connect (player->player, "notify::playing",
 	G_CALLBACK (swfmoz_player_menu_notify_playing), item);
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), 
-	!swfmoz_player_get_paused (player));
+	swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player)));
     gtk_widget_show (item);
     gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
 
     item = gtk_check_menu_item_new_with_mnemonic ("Enable Audio");
     g_signal_connect (item, "toggled", 
-	G_CALLBACK (swfmoz_player_menu_audio_toggled), player);
-    g_signal_connect (player, "notify::audio-enabled",
+	G_CALLBACK (swfmoz_player_menu_audio_toggled), player->player);
+    g_signal_connect (player->player, "notify::audio-enabled",
 	G_CALLBACK (swfmoz_player_menu_notify_audio), item);
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), 
-	swfmoz_player_get_audio_enabled (player));
+	swfdec_gtk_player_get_audio_enabled (SWFDEC_GTK_PLAYER (player->player)));
     gtk_widget_show (item);
     gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
 
@@ -128,12 +130,6 @@ swfmoz_player_popup_menu (SwfmozPlayer *player)
 }
 
 /*** SWFMOZ_PLAYER ***/
-
-enum {
-  PROP_0,
-  PROP_PLAYING,
-  PROP_AUDIO
-};
 
 G_DEFINE_TYPE (SwfmozPlayer, swfmoz_player, G_TYPE_OBJECT)
 
@@ -194,18 +190,25 @@ swfmoz_player_launch (SwfdecPlayer *swfplayer, const char *url, const char *targ
 }
 
 static void
+swfmoz_player_invalidate (SwfmozPlayer *player)
+{
+  swfmoz_player_redraw (player->player, 0.0, 0.0, player->target_width, 
+      player->target_height, player);
+}
+
+static void
+swfmoz_player_notify_playing (SwfdecGtkPlayer *gtkplayer, GParamSpec *pspec, SwfmozPlayer *player)
+{
+  swfmoz_player_invalidate (player);
+}
+
+static void
 swfmoz_player_get_property (GObject *object, guint param_id, GValue *value, 
     GParamSpec * pspec)
 {
-  SwfmozPlayer *player = SWFMOZ_PLAYER (object);
+  //SwfmozPlayer *player = SWFMOZ_PLAYER (object);
   
   switch (param_id) {
-    case PROP_PLAYING:
-      g_value_set_boolean (value, !swfmoz_player_get_paused (player));
-      break;
-    case PROP_AUDIO:
-      g_value_set_boolean (value, !swfmoz_player_get_audio_enabled (player));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -216,15 +219,9 @@ static void
 swfmoz_player_set_property (GObject *object, guint param_id, const GValue *value,
     GParamSpec *pspec)
 {
-  SwfmozPlayer *player = SWFMOZ_PLAYER (object);
+  //SwfmozPlayer *player = SWFMOZ_PLAYER (object);
 
   switch (param_id) {
-    case PROP_PLAYING:
-      swfmoz_player_set_paused (player, !g_value_get_boolean (value));
-      break;
-    case PROP_AUDIO:
-      swfmoz_player_set_audio_enabled (player, g_value_get_boolean (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -236,11 +233,18 @@ swfmoz_player_dispose (GObject *object)
 {
   SwfmozPlayer *player = SWFMOZ_PLAYER (object);
 
-  swfmoz_player_set_paused (player, TRUE);
-
+  if (player->menu) {
+    g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
+	swfmoz_player_menu_notify_playing, NULL);
+    g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
+	swfmoz_player_menu_notify_audio, NULL);
+    gtk_widget_destroy (GTK_WIDGET (player->menu));
+    player->menu = NULL;
+  }
   /* the player might be refed elsewhere */
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_redraw, player);
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_launch, player);
+  g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_notify_playing, player);
   g_object_unref (player->player);
   if (player->target) {
     cairo_destroy (player->target);
@@ -256,18 +260,11 @@ swfmoz_player_dispose (GObject *object)
     g_object_unref (player->initial);
     player->initial = NULL;
   }
-  if (player->menu) {
-    gtk_widget_destroy (GTK_WIDGET (player->menu));
-    player->menu = NULL;
-  }
   if (player->loaders) {
     g_object_unref (player->loaders);
     player->loaders = NULL;
   }
   g_free (player->variables);
-
-  /* sanity checks */
-  g_assert (player->audio == NULL);
 
   G_OBJECT_CLASS (swfmoz_player_parent_class)->dispose (object);
 }
@@ -280,24 +277,16 @@ swfmoz_player_class_init (SwfmozPlayerClass *klass)
   object_class->dispose = swfmoz_player_dispose;
   object_class->get_property = swfmoz_player_get_property;
   object_class->set_property = swfmoz_player_set_property;
-
-  g_object_class_install_property (object_class, PROP_PLAYING,
-      g_param_spec_boolean ("playing", "playing", "TRUE when the player plays",
-	  FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_AUDIO,
-      g_param_spec_boolean ("audio-enabled", "audio enabled", "TRUE when audio should play back",
-	  TRUE, G_PARAM_READWRITE));
 }
 
 static void
 swfmoz_player_init (SwfmozPlayer *player)
 {
-  player->player = swfdec_player_new ();
+  player->player = swfdec_gtk_player_new ();
   g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
   g_signal_connect (player->player, "launch", G_CALLBACK (swfmoz_player_launch), player);
+  g_signal_connect (player->player, "notify::playing", G_CALLBACK (swfmoz_player_notify_playing), player);
   player->context = g_main_context_default ();
-  player->paused = TRUE;
-  player->audio_enabled = TRUE;
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
       SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING, 
@@ -448,7 +437,7 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     swfdec_player_render (player->player, player->intermediate, 
 	x, y, width, height);
   }
-  if (player->paused) {
+  if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
     cairo_t *cr = player->intermediate;
     int w = player_width;
     int h = player_height;
@@ -476,10 +465,10 @@ swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gbo
 
   switch (button) {
     case 1:
-      if (swfmoz_player_get_paused (player)) {
+      if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
 	if (!down)
 	  return FALSE;
-	swfmoz_player_set_paused (player, FALSE);
+	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player->player), TRUE);
       } else {
 	player->mouse_down = down;
 	swfdec_player_handle_mouse (player->player, x, y, down ? 1 : 0);
@@ -501,84 +490,10 @@ swfmoz_player_mouse_moved (SwfmozPlayer *player, int x, int y)
 {
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
 
-  if (!swfmoz_player_get_paused (player)) {
+  if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
     swfdec_player_handle_mouse (player->player, x, y, player->mouse_down ? 1 : 0);
   }
   return FALSE;
-}
-
-gboolean
-swfmoz_player_get_paused (SwfmozPlayer *player)
-{
-  g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), TRUE);
-
-  return player->paused;
-}
-
-static void
-swfmoz_player_invalidate (SwfmozPlayer *player)
-{
-  swfmoz_player_redraw (player->player, 0.0, 0.0, player->target_width, 
-      player->target_height, player);
-}
-
-static void
-swfmoz_player_update_audio (SwfmozPlayer *player)
-{
-  gboolean should_play;
-  
-  should_play = !player->paused && player->audio_enabled;
-
-  if (should_play && player->audio == NULL) {
-    player->audio = swfdec_playback_open (player->player, player->context);
-  } else if (!should_play && player->audio != NULL) {
-    swfdec_playback_close (player->audio);
-    player->audio = NULL;
-  }
-}
-
-void
-swfmoz_player_set_paused (SwfmozPlayer *player, gboolean paused)
-{
-  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
-
-  if (player->paused == paused)
-    return;
-
-  player->paused = paused;
-  swfmoz_player_update_audio (player);
-  if (paused) {
-    g_source_destroy (player->iterate_source);
-    g_source_unref (player->iterate_source);
-    player->iterate_source = NULL;
-  } else {
-    GSource *source = swfdec_iterate_source_new (player->player, 1.0);
-    g_source_attach (source, player->context);
-    player->iterate_source = source;
-  }
-  swfmoz_player_invalidate (player);
-  g_object_notify (G_OBJECT (player), "playing");
-}
-
-gboolean
-swfmoz_player_get_audio_enabled (SwfmozPlayer *player)
-{
-  g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
-
-  return player->audio_enabled;
-}
-
-void
-swfmoz_player_set_audio_enabled (SwfmozPlayer *player, gboolean enable)
-{
-  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
-
-  if (player->audio_enabled == enable)
-    return;
-
-  player->audio_enabled = enable;
-  swfmoz_player_update_audio (player);
-  g_object_notify (G_OBJECT (player), "audio-enabled");
 }
 
 char *
@@ -611,8 +526,8 @@ swfmoz_player_remove (SwfmozPlayer *player)
    */
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
 
-  swfmoz_player_set_paused (player, TRUE);
-  swfmoz_player_set_audio_enabled (player, FALSE);
+  swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player->player), FALSE);
+  swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player->player), FALSE);
   swfmoz_dialog_remove (player);
   g_object_unref (player);
 }

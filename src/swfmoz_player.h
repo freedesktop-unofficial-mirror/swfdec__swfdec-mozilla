@@ -20,8 +20,7 @@
 #ifndef _SWFMOZ_PLAYER_H_
 #define _SWFMOZ_PLAYER_H_
 
-#include <gtk/gtk.h>
-#include <libswfdec/swfdec.h>
+#include <libswfdec-gtk/swfdec-gtk.h>
 #include <npapi.h>
 
 G_BEGIN_DECLS
@@ -71,12 +70,6 @@ struct _SwfmozPlayer {
   int			width;
   int			height;
 
-  /* state */
-  gboolean		paused;			/* if the player acts */
-  gboolean		audio_enabled;		/* TRUE if audio should play */
-  GSource *		iterate_source;		/* source used for iterating */
-  gpointer		audio;			/* audio playback object (or NULL) */
-
   /* Gtk stuff */
   GtkMenu *		menu;			/* right-click menu */
   GtkTreeModel *	loaders;		/* loaders used in this players */
@@ -112,12 +105,6 @@ gboolean	swfmoz_player_mouse_moved	(SwfmozPlayer *		player,
 						 int			x,
 						 int			y);
 
-gboolean	swfmoz_player_get_paused	(SwfmozPlayer *		player);
-void		swfmoz_player_set_paused	(SwfmozPlayer *		player,
-						 gboolean		paused);
-gboolean	swfmoz_player_get_audio_enabled	(SwfmozPlayer *		player);
-void		swfmoz_player_set_audio_enabled	(SwfmozPlayer *		player,
-						 gboolean		enable);
 char *		swfmoz_player_get_filename	(SwfmozPlayer *		player);
 void		swfmoz_player_set_variables	(SwfmozPlayer *		player,
 						 const char *		variables);

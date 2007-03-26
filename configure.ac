@@ -58,59 +58,12 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 SWFDEC_REQUIRES=0.4.3.1
-PKG_CHECK_MODULES(SWFDEC, swfdec-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+PKG_CHECK_MODULES(SWFDEC, swfdec-gtk-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
   AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR $SWFDEC_REQUIRES, which is required for build])
 fi
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
-
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, , AC_MSG_ERROR([cannot find GTK+-2.0 >= 2.8.0]))
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-
-
-dnl
-dnl audio backend
-dnl
-AC_ARG_WITH(audio,
-            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
-                            [audio backend to use])],,
-	    [with_audio=auto])
-
-AUDIO_TYPE=
-if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
-  PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
-  if test "$AUDIO_TYPE" = "alsa"; then
-    with_audio=alsa
-  else
-    AC_MSG_WARN([no alsa audio support])
-  fi
-  AUDIO_CFLAGS=$ALSA_CFLAGS
-  AUDIO_LIBS=$ALSA_LIBS
-fi
-
-if test "$with_audio" = "auto" -o "$with_audio" = "none"; then
-  AUDIO_CFLAGS=
-  AUDIO_LIBS=
-  AUDIO_TYPE=none
-fi
-
-if test "x$AUDIO_TYPE" = "x"; then
-  AC_MSG_ERROR([desired audio support could not be used])
-else
-  AC_MSG_NOTICE([audio backend: $AUDIO_TYPE])
-fi
-AC_SUBST(AUDIO_LIBS)
-AC_SUBST(AUDIO_CFLAGS)
-AC_SUBST(AUDIO_TYPE)
-
-PKG_CHECK_MODULES(CAIRO, cairo >= 1.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
-AC_SUBST(CAIRO_LIBS)
-AC_SUBST(CAIRO_CFLAGS)
-if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cannot find cairo, which is required for build])
-fi
 
 PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
 MOZILLA_DIR=mozilla

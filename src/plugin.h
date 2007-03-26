@@ -20,6 +20,7 @@
 #ifndef _SWFMOZ_PLUGIN_H_
 #define _SWFMOZ_PLUGIN_H_
 
+#include <glib.h>
 #include <npapi.h>
 
 G_BEGIN_DECLS
