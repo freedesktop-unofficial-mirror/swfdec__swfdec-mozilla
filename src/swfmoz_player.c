@@ -155,6 +155,8 @@ swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y,
   if (wi <= 0 || hi <= 0)
     return;
 
+  xi += player->target_rect.x;
+  yi += player->target_rect.y;
   if (player->windowless) {
     NPRect rect;
     rect.left = xi;
@@ -192,8 +194,8 @@ swfmoz_player_launch (SwfdecPlayer *swfplayer, const char *url, const char *targ
 static void
 swfmoz_player_invalidate (SwfmozPlayer *player)
 {
-  swfmoz_player_redraw (player->player, 0.0, 0.0, player->target_width, 
-      player->target_height, player);
+  swfmoz_player_redraw (player->player, 0.0, 0.0, player->target_rect.width, 
+      player->target_rect.height, player);
 }
 
 static void
@@ -247,8 +249,7 @@ swfmoz_player_dispose (GObject *object)
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_notify_playing, player);
   g_object_unref (player->player);
   if (player->target) {
-    cairo_destroy (player->target);
-    cairo_destroy (player->intermediate);
+    g_object_unref (player->target);
     player->target = NULL;
   }
   if (player->repaint_source) {
@@ -385,26 +386,22 @@ swfmoz_player_add_stream (SwfmozPlayer *player, NPStream *stream)
 }
 
 void
-swfmoz_player_set_target (SwfmozPlayer *player, cairo_t *cr, unsigned int width, unsigned int height)
+swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target, 
+    int x, int y, int width, int height)
 {
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
-  g_return_if_fail (cr != NULL);
+  g_return_if_fail (GDK_IS_WINDOW (target));
 
   if (player->target) {
-    cairo_destroy (player->target);
-    cairo_destroy (player->intermediate);
+    g_object_unref (player->target);
   }
-  player->target = cr;
-  player->target_width = width;
-  player->target_height = height;
-  if (cr) {
-    cairo_surface_t *surface;
-    cairo_reference (cr);
-    surface = cairo_surface_create_similar (cairo_get_target (cr), 
-	CAIRO_CONTENT_COLOR_ALPHA, width, height);
-    player->intermediate = cairo_create (surface);
-    cairo_set_source_surface (cr, surface, 0, 0);
-    cairo_surface_destroy (surface);
+  player->target = target;
+  player->target_rect.x = x;
+  player->target_rect.y = y;
+  player->target_rect.width = width;
+  player->target_rect.height = height;
+  if (target) {
+    g_object_ref (target);
   }
 }
 
@@ -412,6 +409,8 @@ void
 swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
 {
   int player_width, player_height;
+  GdkRectangle rect;
+  cairo_t *cr;
 
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
   g_return_if_fail (x >= 0);
@@ -428,19 +427,29 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     player->repaint_source = NULL;
   }
 
+  /* second, check if we have anything to draw */
   if (player->target == NULL)
     return;
+  rect.x = x + player->target_rect.x;
+  rect.y = y + player->target_rect.y;
+  rect.width = width;
+  rect.height = height;
+  if (!gdk_rectangle_intersect (&rect, &player->target_rect, &rect))
+    return;
+
   swfdec_player_get_image_size (player->player, &player_width, &player_height);
-  width = MIN (width, player_width - x);
-  height = MIN (height, player_height - y);
-  if (width > 0 && height > 0) {
-    swfdec_player_render (player->player, player->intermediate, 
-	x, y, width, height);
+  rect.width = MIN (width, player_width);
+  rect.height = MIN (height, player_height);
+
+  gdk_window_begin_paint_rect (player->target, &rect);
+  cr = gdk_cairo_create (player->target);
+  cairo_translate (cr, player->target_rect.x, player->target_rect.y);
+  if (rect.width > 0 && rect.height > 0) {
+    swfdec_player_render (player->player, cr, x, y, rect.width, rect.height);
   }
   if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
-    cairo_t *cr = player->intermediate;
-    int w = player_width;
-    int h = player_height;
+    int w = player->target_rect.width;
+    int h = player->target_rect.height;
     int len = MIN (w, h) * 4 / 5;
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.6);
@@ -453,9 +462,8 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.4);
     cairo_fill (cr);
   }
-
-  cairo_rectangle (player->target, x, y, width, height);
-  cairo_fill (player->target);
+  cairo_destroy (cr);
+  gdk_window_end_paint (player->target);
 }
 
 gboolean

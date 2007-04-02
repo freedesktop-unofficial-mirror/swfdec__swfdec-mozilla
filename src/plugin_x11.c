@@ -21,124 +21,20 @@
 #include "config.h"
 #endif
 
-#include <cairo-xlib.h>
-
 #include "swfmoz_player.h"
-
-/*** GSource for Display handling ***/
-
-/* This code is based upon GDKs implementation of a source for X11
- * Display handling */
-
-typedef gboolean (* DisplaySourceHandler) (gpointer user_data, XEvent *event);
-typedef struct {
-  GSource source;
-
-  Display *display;
-  GPollFD event_poll_fd;
-} DisplaySource;
-
-static gboolean
-display_source_prepare (GSource *source, gint *timeout)
-{
-  Display *disp = ((DisplaySource*) source)->display;
-
-  *timeout = -1;
-  return XPending (disp) > 0;
-}
-
-static gboolean
-display_source_check (GSource *source)
-{
-  Display *disp = ((DisplaySource*) source)->display;
-
-  return XPending (disp) > 0;
-}
-
-static gboolean
-display_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
-{
-  Display *disp = ((DisplaySource*) source)->display;
-
-  if (XPending (disp)) {
-    XEvent event;
-    DisplaySourceHandler handler = (DisplaySourceHandler) callback;
-    XNextEvent (disp, &event);
-    handler (user_data, &event);
-  }
-  return TRUE;
-}
-
-static GSourceFuncs display_source_funcs = {
-  display_source_prepare,
-  display_source_check,
-  display_source_dispatch,
-  NULL
-};
-
-static GSource *
-display_source_new (Display *display)
-{
-  GSource *ret;
-  DisplaySource *source;
-
-  g_return_val_if_fail (display != NULL, NULL);
-
-  ret = g_source_new (&display_source_funcs, sizeof (DisplaySource));
-  source = (DisplaySource *) ret;
-  source->display = display;
-  source->event_poll_fd.fd = ConnectionNumber (display);
-  source->event_poll_fd.events = G_IO_IN;
-  
-  g_source_add_poll (ret, &source->event_poll_fd);
-  g_source_set_can_recurse (ret, TRUE);
-  return ret;
-}
 
 /*** Plugin code ***/
 
-typedef struct {
-  Display *	display;
-  GSource *	source;
-  Window	window;
-} SwfmozX11Data;
-
-static GQuark quark = 0;
-
-static void
-swfmoz_x11_data_free (SwfmozX11Data *data)
+static GdkFilterReturn
+plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer playerp)
 {
-  if (data == NULL)
-    return;
+  SwfmozPlayer *player = playerp;
+  XEvent *event = gdkxevent;
 
-  g_source_destroy (data->source);
-  g_source_unref (data->source);
-  XDestroyWindow (data->display, data->window);
-  XCloseDisplay (data->display);
-  g_free (data);
-}
-
-static void
-swfmoz_x11_data_set (SwfmozPlayer *player, SwfmozX11Data *data)
-{
-  if (quark == 0)
-    quark = g_quark_from_static_string ("swfmoz-x11-data");
-
-  g_object_set_qdata_full (G_OBJECT (player), quark, data,
-      (GDestroyNotify) swfmoz_x11_data_free);
-}
-
-static SwfmozX11Data *
-swfmoz_x11_data_get (SwfmozPlayer *player)
-{
-  g_assert (quark != 0);
-  return g_object_get_qdata (G_OBJECT (player), quark);
-}
-
-gboolean
-plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
-{
   switch (event->type) {
+    case VisibilityNotify:
+      swfmoz_player_render (player, 0, 0, player->target_rect.width, player->target_rect.height);
+      break;
     case Expose:
       {
 	XExposeEvent *expose = (XExposeEvent *) event;
@@ -154,14 +50,15 @@ plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
 	    button->y, event->type == ButtonPress);
 	break;
       }
+    case EnterNotify:
+    case LeaveNotify:
+      /* FIXME: implement */
+      break;
     case MotionNotify:
       {
-	Window root, child;
-	int rootx, rooty, winx, winy;
-	guint xmask;
-	SwfmozX11Data *data = swfmoz_x11_data_get (player);
-	XQueryPointer (data->display, data->window, &root, &child, 
-	    &rootx, &rooty, &winx, &winy, &xmask);
+	int winx, winy;
+
+	gdk_window_get_pointer (player->target, &winx, &winy, NULL);
 	swfmoz_player_mouse_moved (player, winx, winy);
 	break;
       }
@@ -169,41 +66,65 @@ plugin_x11_handle_event (SwfmozPlayer *player, XEvent *event)
       g_printerr ("unhandled event %d\n", event->type);
       break;
   }
-  return TRUE;
+  return GDK_FILTER_REMOVE;
+}
+
+static void
+plugin_x11_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, GdkWindow *window)
+{
+  GdkColor color;
+  guint c;
+
+  c = swfdec_player_get_background_color (player);
+  color.red = ((c & 0xFF0000) >> 16) * 0x101;
+  color.green = ((c & 0xFF00) >> 8) * 0x101;
+  color.blue = (c & 0xFF) * 0x101;
+  gdk_window_set_background (window, &color);
 }
 
 void
-plugin_x11_setup_windowed (SwfmozPlayer *player, const char *display_name,
-    Window window, int width, int height)
+plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow, 
+    int x, int y, int width, int height)
 {
-  SwfmozX11Data *data = g_new0 (SwfmozX11Data, 1);
-  cairo_t *cr;
-  cairo_surface_t *surface;
-  XWindowAttributes attr;
-
-  swfmoz_x11_data_set (player, data);
-  data->display = XOpenDisplay (display_name);
-  data->source = display_source_new (data->display);
-  g_source_set_callback (data->source, (GSourceFunc) plugin_x11_handle_event,
-    player, NULL);
-  g_source_attach (data->source, player->context);
-  data->window = XCreateSimpleWindow (data->display, window, 0, 0, width, height,
-      0, 0, 0);
-  XMapWindow (data->display, data->window);
-  XSelectInput (data->display, data->window, ExposureMask | ButtonPressMask | 
-      ButtonReleaseMask | PointerMotionMask | PointerMotionHintMask);
-
-  XGetWindowAttributes (data->display, data->window, &attr);
-  surface = cairo_xlib_surface_create (data->display, data->window,
-      attr.visual, width, height);
-  cr = cairo_create (surface);
-  swfmoz_player_set_target (player, cr, width, height);
-  cairo_surface_destroy (surface);
+  if (player->target == NULL) {
+    GdkWindowAttr attr;
+    GdkWindow *parent, *window;
+    
+    parent = gdk_window_foreign_new (xwindow);
+    if (parent == NULL) {
+      g_printerr ("invalid window given for setup (id %lu)\n", xwindow);
+      return;
+    }
+    
+    attr.event_mask = GDK_VISIBILITY_NOTIFY_MASK | GDK_EXPOSURE_MASK | 
+      GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK |
+      GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | 
+      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
+    attr.x = 0;
+    attr.y = 0;
+    attr.width = width;
+    attr.height = height;
+    attr.window_type = GDK_WINDOW_CHILD;
+    attr.wclass = GDK_INPUT_OUTPUT;
+    window = gdk_window_new (parent, &attr, GDK_WA_X | GDK_WA_Y);
+    gdk_window_add_filter (window, plugin_x11_handle_event, player);
+    gdk_window_show (window);
+    swfmoz_player_set_target (player, window, 0, 0, width, height);
+    plugin_x11_notify_cb (player->player, NULL, window);
+    g_signal_connect (player->player, "notify::background-color", 
+	G_CALLBACK (plugin_x11_notify_cb), window);
+  } else {
+    gdk_window_move_resize (player->target, 0, 0, width, height);
+  }
 }
 
 void
 plugin_x11_teardown (SwfmozPlayer *player)
 {
-  swfmoz_x11_data_set (player, NULL);
-  swfmoz_player_set_target (player, NULL, 0, 0);
+  if (player->target) {
+    gdk_window_remove_filter (player->target, plugin_x11_handle_event, player);
+    g_signal_handlers_disconnect_by_func (player->player, 
+	plugin_x11_notify_cb, player->target);
+  }
+  swfmoz_player_set_target (player, NULL, 0, 0, 0, 0);
 }

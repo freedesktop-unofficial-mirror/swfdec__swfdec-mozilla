@@ -57,10 +57,8 @@ struct _SwfmozPlayer {
   SwfdecLoader *	initial;		/* loader that spawned this player or NULL if none yet */
   char *		variables;		/* variables to pass to initial loader */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
-  cairo_t *		target;			/* what we draw to */
-  cairo_t *		intermediate;		/* intermediate target to avoid flicker */
-  unsigned int		target_width;		/* width of target */
-  unsigned int		target_height;		/* height of target */
+  GdkWindow *		target;			/* what we draw to */
+  GdkRectangle		target_rect;		/* area in target that this plugin occupies */
   gboolean		mouse_down;		/* saved state for the mouse */
 
   /* for windowed operation */
@@ -88,9 +86,11 @@ void		swfmoz_player_remove		(SwfmozPlayer *		player);
 SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
 						 NPStream *		stream);
 void		swfmoz_player_set_target	(SwfmozPlayer *		player,
-						 cairo_t *		cr,
-						 unsigned int		width,
-						 unsigned int		height);
+						 GdkWindow *		target,
+						 int			x,
+						 int			y,
+						 int			width,
+						 int			height);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
 						 int			x,
 						 int			y,

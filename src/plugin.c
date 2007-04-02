@@ -142,6 +142,16 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	if (question_mark)
 	  variables = question_mark + 1;
       }
+    } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
+      GdkColor color;
+      if (gdk_color_parse (argv[i], &color)) {
+	swfdec_player_set_background_color (instance->pdata, 
+	    0xFF000000 | (color.red / 0x101 << 16) | 
+	    (color.green / 0x101 << 8) | (color.blue / 0x101));
+      }
+    } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
+    } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
+    } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
     } else {
       g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
 	  argn[i], argv[i] ? argv[i] : "(null)");
@@ -242,14 +252,12 @@ plugin_stream_as_file (NPP instance, NPStream *stream, const char *filename)
 static NPError 
 plugin_set_window (NPP instance, NPWindow *window)
 {
-  NPSetWindowCallbackStruct *info = window->ws_info;
-  
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
   if (window) {
-    plugin_x11_setup_windowed (instance->pdata, DisplayString (info->display),
-	(Window) window->window, window->width, window->height);
+    plugin_x11_setup_windowed (instance->pdata, (Window) window->window, 
+	window->x, window->y, window->width, window->height);
   } else {
     plugin_x11_teardown (instance->pdata);
   }

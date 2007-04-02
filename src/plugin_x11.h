@@ -28,8 +28,9 @@ G_BEGIN_DECLS
 
 
 void	plugin_x11_setup_windowed	(SwfmozPlayer *	      player,
-					 const char *	      display_name,
 					 Window		      window,
+					 int		      x,
+					 int		      y,
 					 int		      width,
 					 int		      height);
 void	plugin_x11_teardown		(SwfmozPlayer *	      player);
