@@ -145,7 +145,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
       GdkColor color;
       if (gdk_color_parse (argv[i], &color)) {
-	swfdec_player_set_background_color (instance->pdata, 
+	swfdec_player_set_background_color (SWFMOZ_PLAYER (instance->pdata)->player, 
 	    0xFF000000 | (color.red / 0x101 << 16) | 
 	    (color.green / 0x101 << 8) | (color.blue / 0x101));
       }
