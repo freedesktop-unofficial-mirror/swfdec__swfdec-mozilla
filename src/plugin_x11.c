@@ -79,6 +79,7 @@ plugin_x11_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, GdkWindow *window
   color.red = ((c & 0xFF0000) >> 16) * 0x101;
   color.green = ((c & 0xFF00) >> 8) * 0x101;
   color.blue = (c & 0xFF) * 0x101;
+  gdk_rgb_find_color (gdk_window_get_colormap (window), &color);
   gdk_window_set_background (window, &color);
 }
 
