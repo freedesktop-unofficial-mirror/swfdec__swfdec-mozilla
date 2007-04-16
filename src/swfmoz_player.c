@@ -198,10 +198,66 @@ swfmoz_player_invalidate (SwfmozPlayer *player)
       player->target_rect.height, player);
 }
 
+/* function stolen from SwfdecGtkWidget */
 static void
-swfmoz_player_notify_playing (SwfdecGtkPlayer *gtkplayer, GParamSpec *pspec, SwfmozPlayer *player)
+swfmoz_player_update_cursor (SwfmozPlayer *player)
 {
-  swfmoz_player_invalidate (player);
+  GdkWindow *window = player->target;
+  GdkDisplay *display;
+  SwfdecMouseCursor swfcursor;
+  GdkCursor *cursor;
+
+  if (window == NULL)
+    return;
+  display = gdk_drawable_get_display (window);
+  g_object_get (player->player, "mouse-cursor", &swfcursor, NULL);
+
+  switch (swfcursor) {
+    case SWFDEC_MOUSE_CURSOR_NONE:
+      {
+	GdkBitmap *bitmap;
+	GdkColor color = { 0, 0, 0, 0 };
+	char data = 0;
+
+	bitmap = gdk_bitmap_create_from_data (window, &data, 1, 1);
+	if (bitmap == NULL)
+	  return;
+	cursor = gdk_cursor_new_from_pixmap (bitmap, bitmap, &color, &color, 0, 0);
+	gdk_window_set_cursor (window, cursor);
+	gdk_cursor_unref (cursor);
+	g_object_unref (bitmap);
+	break;
+      }
+    case SWFDEC_MOUSE_CURSOR_TEXT:
+      cursor = gdk_cursor_new_for_display (display, GDK_XTERM);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    case SWFDEC_MOUSE_CURSOR_CLICK:
+      cursor = gdk_cursor_new_for_display (display, GDK_HAND2);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    case SWFDEC_MOUSE_CURSOR_NORMAL:
+      cursor = gdk_cursor_new_for_display (display, GDK_LEFT_PTR);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    default:
+      g_warning ("invalid cursor %d", (int) swfcursor);
+      gdk_window_set_cursor (window, NULL);
+      break;
+  }
+}
+
+static void
+swfmoz_player_notify (SwfdecGtkPlayer *gtkplayer, GParamSpec *pspec, SwfmozPlayer *player)
+{
+  if (g_str_equal (pspec->name, "playing")) {
+    swfmoz_player_invalidate (player);
+  } else if (g_str_equal (pspec->name, "mouse-cursor")) {
+    swfmoz_player_update_cursor (player);
+  }
 }
 
 static void
@@ -246,7 +302,7 @@ swfmoz_player_dispose (GObject *object)
   /* the player might be refed elsewhere */
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_redraw, player);
   g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_launch, player);
-  g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_notify_playing, player);
+  g_signal_handlers_disconnect_by_func (player->player, swfmoz_player_notify, player);
   g_object_unref (player->player);
   if (player->target) {
     g_object_unref (player->target);
@@ -286,7 +342,7 @@ swfmoz_player_init (SwfmozPlayer *player)
   player->player = swfdec_gtk_player_new ();
   g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
   g_signal_connect (player->player, "launch", G_CALLBACK (swfmoz_player_launch), player);
-  g_signal_connect (player->player, "notify::playing", G_CALLBACK (swfmoz_player_notify_playing), player);
+  g_signal_connect (player->player, "notify", G_CALLBACK (swfmoz_player_notify), player);
   player->context = g_main_context_default ();
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
@@ -402,6 +458,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   player->target_rect.height = height;
   if (target) {
     g_object_ref (target);
+    swfmoz_player_update_cursor (player);
   }
 }
 

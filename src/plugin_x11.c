@@ -79,6 +79,7 @@ plugin_x11_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, GdkWindow *window
   color.red = ((c & 0xFF0000) >> 16) * 0x101;
   color.green = ((c & 0xFF00) >> 8) * 0x101;
   color.blue = (c & 0xFF) * 0x101;
+  gdk_rgb_find_color (gdk_window_get_colormap (window), &color);
   gdk_window_set_background (window, &color);
 }
 
@@ -97,7 +98,7 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
     }
     
     attr.event_mask = GDK_VISIBILITY_NOTIFY_MASK | GDK_EXPOSURE_MASK | 
-      GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK |
+      GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK |
       GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | 
       GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
     attr.x = 0;
