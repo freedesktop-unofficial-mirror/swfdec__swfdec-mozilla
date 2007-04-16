@@ -434,12 +434,12 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
   rect.y = y + player->target_rect.y;
   rect.width = width;
   rect.height = height;
-  if (!gdk_rectangle_intersect (&rect, &player->target_rect, &rect))
-    return;
-
   swfdec_player_get_image_size (player->player, &player_width, &player_height);
   rect.width = MIN (width, player_width);
   rect.height = MIN (height, player_height);
+
+  if (!gdk_rectangle_intersect (&rect, &player->target_rect, &rect))
+    return;
 
   gdk_window_begin_paint_rect (player->target, &rect);
   cr = gdk_cairo_create (player->target);
@@ -448,8 +448,8 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     swfdec_player_render (player->player, cr, x, y, rect.width, rect.height);
   }
   if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
-    int w = player->target_rect.width;
-    int h = player->target_rect.height;
+    int w = MIN (player->target_rect.width, player_width);
+    int h = MIN (player->target_rect.height, player_height);
     int len = MIN (w, h) * 4 / 5;
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.6);
