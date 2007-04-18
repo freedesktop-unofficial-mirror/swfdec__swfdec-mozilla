@@ -573,14 +573,19 @@ swfmoz_player_get_filename (SwfmozPlayer *player)
 }
 
 void
-swfmoz_player_set_variables (SwfmozPlayer *player, const char *variables)
+swfmoz_player_add_variables (SwfmozPlayer *player, const char *variables)
 {
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
   g_return_if_fail (player->initial == NULL);
   g_return_if_fail (variables != NULL);
 
-  g_free (player->variables);
-  player->variables = g_strdup (variables);
+  if (player->variables) {
+    char *tmp = g_strconcat (player->variables, "&", variables, NULL);
+    g_free (player->variables);
+    player->variables = tmp;
+  } else {
+    player->variables = g_strdup (variables);
+  }
 }
 
 void

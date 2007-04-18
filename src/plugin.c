@@ -99,7 +99,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     NPSavedData * saved)
 {
   int i;
-  char *variables = NULL;
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -130,17 +129,18 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   instance->pdata = swfmoz_player_new (instance, FALSE);
 
   /* set the properties we support */
+  /* FIXME: figure out how variables override each other */
   for (i = 0; i < argc; i++) {
     if (argn[i] == NULL)
       continue;
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
-	variables = argv[i];
+	swfmoz_player_add_variables (instance->pdata, argv[i]);
     } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
-      if (argv[i] && variables == NULL) {
+      if (argv[i]) {
 	char *question_mark = strchr (argv[i], '?');
 	if (question_mark)
-	  variables = question_mark + 1;
+	  swfmoz_player_add_variables (instance->pdata, question_mark + 1);
       }
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
       GdkColor color;
@@ -157,8 +157,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	  argn[i], argv[i] ? argv[i] : "(null)");
     }
   }
-  if (variables)
-    swfmoz_player_set_variables (instance->pdata, variables);
 
   return NPERR_NO_ERROR;
 }
