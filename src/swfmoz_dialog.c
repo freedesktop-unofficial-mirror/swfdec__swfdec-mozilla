@@ -132,6 +132,7 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
     gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (chooser), s);
     g_free (s);
   }
+  gtk_dialog_set_default_response (GTK_DIALOG (chooser), GTK_RESPONSE_ACCEPT);
 
   gtk_window_set_destroy_with_parent (GTK_WINDOW (chooser), TRUE);
   g_signal_connect (chooser, "response", G_CALLBACK (swfmoz_dialog_do_save_media), loader);
