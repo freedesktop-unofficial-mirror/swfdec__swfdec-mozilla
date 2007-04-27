@@ -1,4 +1,13 @@
 
+ 0.4.4 ()
+
+This release has a lot of internal changes that reduce memory usage and fix 
+bugs. Among them:
+- Fix Youtube videos sometimes not playing.
+- Fix random crashes when visiting Flash-heavy sites
+- Fix drawing glitches with fullscreen Flash files.
+- Support for cursor changing.
+
  0.4.3 ("Now this puny world will bow down to me!")
 
 This release includes some improvements to the properties dialog. It

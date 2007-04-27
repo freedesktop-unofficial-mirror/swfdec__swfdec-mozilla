@@ -106,7 +106,7 @@ gboolean	swfmoz_player_mouse_moved	(SwfmozPlayer *		player,
 						 int			y);
 
 char *		swfmoz_player_get_filename	(SwfmozPlayer *		player);
-void		swfmoz_player_set_variables	(SwfmozPlayer *		player,
+void		swfmoz_player_add_variables	(SwfmozPlayer *		player,
 						 const char *		variables);
 					 
 
