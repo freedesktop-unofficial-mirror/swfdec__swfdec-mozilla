@@ -65,23 +65,15 @@ fi
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
-PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
-MOZILLA_DIR=mozilla
-if test "$HAVE_MOZILLA" = no ; then
-  PKG_CHECK_MODULES(MOZILLA, firefox-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
-  MOZILLA_DIR=mozilla-firefox
-fi
-if test "$HAVE_MOZILLA" = no ; then
-  PKG_CHECK_MODULES(MOZILLA, iceape-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
-  MOZILLA_DIR=iceape
-fi
+dnl setup Mozilla install directory
+PLUGIN_DIR=${libdir}/mozilla/plugins
+AC_ARG_WITH(plugin-dir, 
+   AC_HELP_STRING([--with-plugin-dir],[install directory for plugin]),
+   [PLUGIN_DIR=${withval}])
+AC_SUBST(PLUGIN_DIR)
+
+MOZILLA_CFLAGS="-I\$(top_srcdir)/mozilla-sucks"
 AC_SUBST(MOZILLA_CFLAGS)
-AC_SUBST(MOZILLA_LIBS)
-AC_SUBST(MOZILLA_DIR)
-AM_CONDITIONAL(HAVE_MOZILLA, [test $HAVE_MOZILLA = yes])
-if test "x$HAVE_MOZILLA" = "xno"; then
-  AC_MSG_ERROR([Mozilla not found. Mozilla/Netscape plugin will not be built.])
-fi
 
 dnl define standard mozilla defines
 dnl this needs updates if we want to compile on Windows or OS X
@@ -90,20 +82,13 @@ AC_DEFINE_UNQUOTED(MOZ_X11, 1, [Define the Mozilla windowing])
 
 AC_SUBST(GLOBAL_CFLAGS)
 
-if test "x${prefix}" = "xNONE"; then
-  PACKAGE_PREFIX=${ac_default_prefix}
-else
-  PACKAGE_PREFIX=${prefix}
-fi
-AC_DEFINE_UNQUOTED(PACKAGE_PREFIX, "$PACKAGE_PREFIX", [Define the package prefix])
-AC_SUBST(PACKAGE_PREFIX)
-
 dnl #########################
 dnl # Make the output files #
 dnl #########################
 
 AC_CONFIG_FILES(
 Makefile
+mozilla-sucks/Makefile
 src/Makefile
 )
 

@@ -1,4 +1,5 @@
 SUBDIRS= \
+	mozilla-sucks \
 	src
 
 ACLOCAL_FLAGS = -I m4
