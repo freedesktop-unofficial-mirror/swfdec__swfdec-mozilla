@@ -1,4 +1,9 @@
 
+ 0.4.5 ("Who's Jack?")
+
+This release fixes the build system of the Mozilla plugin. Apparently neither 
+Mozilla nor distros can provide a sane plugin API.
+
  0.4.4 ("The death camp of tolerance")
 
 This release has a lot of internal changes that reduce memory usage and fix 
