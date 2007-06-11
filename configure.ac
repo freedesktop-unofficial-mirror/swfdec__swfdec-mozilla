@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec-mozilla,0.4.4.1)
+AC_INIT(swfdec-mozilla,0.4.5)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -57,7 +57,7 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-SWFDEC_REQUIRES=0.4.4.1
+SWFDEC_REQUIRES=0.4.5
 PKG_CHECK_MODULES(SWFDEC, swfdec-gtk-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
   AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR $SWFDEC_REQUIRES, which is required for build])
