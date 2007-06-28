@@ -103,10 +103,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  /* if no main loop is running, we're not able to use it, and we need a main loop */
-  if (g_main_depth () == 0)
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
-
   if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
 	NPPVpluginKeepLibraryInMemory, (void *) PR_TRUE))
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
