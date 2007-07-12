@@ -47,7 +47,8 @@ swfmoz_loader_dispose (GObject *object)
 }
 
 static SwfdecLoader *
-swfmoz_loader_load (SwfdecLoader *loader, const char *url)
+swfmoz_loader_load (SwfdecLoader *loader, const char *url, SwfdecLoaderRequest request, 
+    const char *data, gsize data_len)
 {
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
   SwfdecLoader *new;
