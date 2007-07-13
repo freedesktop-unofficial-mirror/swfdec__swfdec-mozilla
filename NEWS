@@ -1,4 +1,9 @@
 
+ 0.5.0 ("Destroy all the old prints in celebration")
+
+This is just a port of the API to Swfdec 0.5. The only feature is this:
+- fix plugin to run with Firefox 3 alphas.
+
  0.4.5 ("Who's Jack?")
 
 This release fixes the build system of the Mozilla plugin. Apparently neither 
