@@ -69,7 +69,8 @@ swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
     "Eric Anholt <eric@anholt.net>",
     NULL,
   };
-  gtk_show_about_dialog (NULL, "authors", authors,
+  gtk_show_about_dialog (NULL, "program-name", "Swfdec",
+      "authors", authors,
       "comments", "Play Flash content in your browser",
       "name", "Swfdec Mozilla Plugin",
       "version", VERSION,
