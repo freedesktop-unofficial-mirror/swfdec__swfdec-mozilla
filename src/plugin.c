@@ -159,6 +159,30 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	scale = SWFDEC_SCALE_SHOW_ALL;
       }
       swfdec_player_set_scale_mode (SWFMOZ_PLAYER (instance->pdata)->player, scale);
+    } else if (g_ascii_strcasecmp (argn[i], "salign") == 0) {
+      struct {
+	const char *	name;
+	SwfdecAlignment	align;
+      } possibilities[] = {
+	{ "t", SWFDEC_ALIGNMENT_TOP },
+	{ "l", SWFDEC_ALIGNMENT_LEFT },
+	{ "r", SWFDEC_ALIGNMENT_RIGHT },
+	{ "b", SWFDEC_ALIGNMENT_BOTTOM },
+	{ "tl", SWFDEC_ALIGNMENT_TOP_LEFT },
+	{ "tr", SWFDEC_ALIGNMENT_TOP_RIGHT },
+	{ "bl", SWFDEC_ALIGNMENT_BOTTOM_LEFT },
+	{ "br", SWFDEC_ALIGNMENT_BOTTOM_RIGHT }
+      };
+      SwfdecAlignment align = SWFDEC_ALIGNMENT_CENTER;
+      guint i;
+
+      for (i = 0; i < G_N_ELEMENTS (possibilities); i++) {
+	if (g_ascii_strcasecmp (argv[i], possibilities[i].name) == 0) {
+	  align = possibilities[i].align;
+	  break;
+	}
+      }
+      swfdec_player_set_alignment (SWFMOZ_PLAYER (instance->pdata)->player, align);
     } else {
       g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
 	  argn[i], argv[i] ? argv[i] : "(null)");
