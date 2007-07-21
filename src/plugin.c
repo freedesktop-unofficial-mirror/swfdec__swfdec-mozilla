@@ -149,6 +149,16 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
+    } else if (g_ascii_strcasecmp (argn[i], "scale") == 0) {
+      SwfdecScaleMode scale;
+      if (g_ascii_strcasecmp (argv[i], "noborder") == 0) {
+	scale = SWFDEC_SCALE_NO_BORDER;
+      } else if (g_ascii_strcasecmp (argv[i], "exactfit") == 0) {
+	scale = SWFDEC_SCALE_EXACT_FIT;
+      } else {
+	scale = SWFDEC_SCALE_SHOW_ALL;
+      }
+      swfdec_player_set_scale_mode (SWFMOZ_PLAYER (instance->pdata)->player, scale);
     } else {
       g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
 	  argn[i], argv[i] ? argv[i] : "(null)");
