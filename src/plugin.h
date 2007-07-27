@@ -26,17 +26,20 @@
 G_BEGIN_DECLS
 
 
-void	plugin_get_url			(NPP		instance,
-					 const char *	url,
-					 const char *	target);
-void	plugin_get_url_notify		(NPP		instance,
-					 const char *	url,
-					 const char *	target,
-					 void *		data);
+void		plugin_get_url			(NPP		instance,
+						 const char *	url,
+						 const char *	target);
+void		plugin_get_url_notify		(NPP		instance,
+						 const char *	url,
+						 const char *	target,
+						 void *		data);
 
-void	plugin_invalidate_rect		(NPP		instance,
-					 NPRect *	rect);
+void		plugin_invalidate_rect		(NPP		instance,
+						 NPRect *	rect);
 
+gboolean	plugin_push_allow_popups	(NPP		instance,
+						 gboolean	allow);
+gboolean	plugin_pop_allow_popups		(NPP		instance);
 
 G_END_DECLS
 #endif

@@ -531,7 +531,9 @@ swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gbo
 	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player->player), TRUE);
       } else {
 	player->mouse_down = down;
+	plugin_push_allow_popups (player->instance, TRUE);
 	swfdec_player_handle_mouse (player->player, x, y, down ? 1 : 0);
+	plugin_pop_allow_popups (player->instance);
       }
       return TRUE;
     case 3:

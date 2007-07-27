@@ -58,6 +58,18 @@ plugin_invalidate_rect (NPP instance, NPRect *rect)
   CallNPN_InvalidateRectProc (mozilla_funcs.invalidaterect, instance, rect);
 }
 
+gboolean
+plugin_push_allow_popups (NPP instance, gboolean allow)
+{
+  return CallNPN_PushPopupsEnabledStateProc (mozilla_funcs.pushpopupsenabledstate, instance, allow);
+}
+
+gboolean
+plugin_pop_allow_popups (NPP instance)
+{
+  return CallNPN_PopPopupsEnabledStateProc (mozilla_funcs.poppopupsenabledstate, instance);
+}
+
 /*** plugin implementation ***/
 
 char *
