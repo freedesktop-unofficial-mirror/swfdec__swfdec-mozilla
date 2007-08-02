@@ -170,6 +170,8 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	scale = SWFDEC_SCALE_NO_BORDER;
       } else if (g_ascii_strcasecmp (argv[i], "exactfit") == 0) {
 	scale = SWFDEC_SCALE_EXACT_FIT;
+      } else if (g_ascii_strcasecmp (argv[i], "noscale") == 0) {
+	scale = SWFDEC_SCALE_NONE;
       } else {
 	scale = SWFDEC_SCALE_SHOW_ALL;
       }
