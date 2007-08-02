@@ -153,12 +153,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
 	swfmoz_player_add_variables (instance->pdata, argv[i]);
-    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
-      if (argv[i]) {
-	char *question_mark = strchr (argv[i], '?');
-	if (question_mark)
-	  swfmoz_player_add_variables (instance->pdata, question_mark + 1);
-      }
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
       GdkColor color;
       if (gdk_color_parse (argv[i], &color)) {
@@ -166,6 +160,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	    0xFF000000 | (color.red / 0x101 << 16) | 
 	    (color.green / 0x101 << 8) | (color.blue / 0x101));
       }
+    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
