@@ -378,7 +378,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   gtk_list_store_set (store, iter,
     SWFMOZ_LOADER_COLUMN_LOADER, loader,
     SWFMOZ_LOADER_COLUMN_NAME, filename,
-    SWFMOZ_LOADER_COLUMN_URL, loader->url,
+    SWFMOZ_LOADER_COLUMN_URL, swfdec_url_get_url (swfdec_loader_get_url (loader)),
     SWFMOZ_LOADER_COLUMN_EOF, percent == 100,
     SWFMOZ_LOADER_COLUMN_ERROR, loader->error != NULL,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
