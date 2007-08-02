@@ -373,13 +373,13 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   if (percent) {
     percent = 100 * swfdec_loader_get_loaded (loader) / percent;
   } else {
-    percent = loader->eof ? 100 : 50;
+    percent = 50;
   }
   gtk_list_store_set (store, iter,
     SWFMOZ_LOADER_COLUMN_LOADER, loader,
     SWFMOZ_LOADER_COLUMN_NAME, filename,
     SWFMOZ_LOADER_COLUMN_URL, loader->url,
-    SWFMOZ_LOADER_COLUMN_EOF, loader->eof,
+    SWFMOZ_LOADER_COLUMN_EOF, percent == 100,
     SWFMOZ_LOADER_COLUMN_ERROR, loader->error != NULL,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
     SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, percent,

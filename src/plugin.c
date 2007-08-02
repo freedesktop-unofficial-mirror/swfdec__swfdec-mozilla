@@ -53,6 +53,14 @@ plugin_get_url_notify (NPP instance, const char *url,
 }
 
 void
+plugin_post_url_notify (NPP instance, const char *url,
+    const char *target, const char *data, guint data_len, void *user_data)
+{
+  CallNPN_PostURLNotifyProc (mozilla_funcs.posturlnotify, instance, 
+      url, target, data_len, data, FALSE, user_data);
+}
+
+void
 plugin_invalidate_rect (NPP instance, NPRect *rect)
 {
   CallNPN_InvalidateRectProc (mozilla_funcs.invalidaterect, instance, rect);
@@ -242,6 +250,7 @@ plugin_destroy_stream (NPP instance, NPStream* stream, NPReason reason)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   SWFMOZ_LOADER (stream->pdata)->stream = NULL;
+  swfmoz_loader_ensure_open (stream->pdata);
   swfdec_loader_eof (stream->pdata);
   g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
@@ -271,6 +280,7 @@ plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buf
   new = swfdec_buffer_new ();
   new->length = len;
   new->data = g_memdup (buffer, len);
+  swfmoz_loader_ensure_open (stream->pdata);
   swfdec_loader_push (stream->pdata, new);
   return len;
 }

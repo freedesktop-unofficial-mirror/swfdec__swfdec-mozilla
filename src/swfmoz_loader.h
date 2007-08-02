@@ -44,6 +44,7 @@ struct _SwfmozLoader
   NPStream *		stream;		/* stream we do */
 
   char *		cache_file;	/* where the file is cached */
+  gboolean		open;		/* TRUE when data has arrived */
 };
 
 struct _SwfmozLoaderClass
@@ -58,6 +59,7 @@ SwfdecLoader *	swfmoz_loader_new	  	(NPP		instance,
 void		swfmoz_loader_set_stream	(SwfmozLoader *	loader,
 						 NPP		instance,
 						 NPStream *	stream);
+void		swfmoz_loader_ensure_open	(SwfmozLoader *	loader);
 					 
 const char *	swfmoz_loader_get_data_type_string
 						(SwfdecLoader *	loader);

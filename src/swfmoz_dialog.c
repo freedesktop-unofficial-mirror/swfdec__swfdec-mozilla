@@ -115,7 +115,7 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
   if (loader->cache_file == NULL) {
     /* FIXME: redownload the file */
     g_printerr ("The file \"%s\" is not available locally\n", 
-	SWFDEC_LOADER (loader)->url);
+	swfdec_url_get_url (swfdec_loader_get_url (SWFDEC_LOADER (loader))));
     return;
   }
   

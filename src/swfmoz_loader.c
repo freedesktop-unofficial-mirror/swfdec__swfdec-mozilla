@@ -46,18 +46,21 @@ swfmoz_loader_dispose (GObject *object)
   G_OBJECT_CLASS (swfmoz_loader_parent_class)->dispose (object);
 }
 
-static SwfdecLoader *
-swfmoz_loader_load (SwfdecLoader *loader, const char *url, SwfdecLoaderRequest request, 
-    const char *data, gsize data_len)
+static void
+swfmoz_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, 
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
-  SwfdecLoader *new;
+  const char *url;
 
-  /* FIXME: add guards so not every URL is loaded */
-  new = g_object_new (SWFMOZ_TYPE_LOADER, NULL);
-  g_object_ref (new);
-  plugin_get_url_notify (moz->instance, url, NULL, new);
-  return new;
+  moz->instance = SWFMOZ_LOADER (parent)->instance;
+  g_object_ref (moz);
+  url = swfdec_url_get_url (swfdec_loader_get_url (loader));
+  if (request == SWFDEC_LOADER_REQUEST_POST) {
+    plugin_post_url_notify (moz->instance, url, NULL, data, data_len, moz);
+  } else {
+    plugin_get_url_notify (moz->instance, url, NULL, moz);
+  }
 }
 
 static void
@@ -85,21 +88,34 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPP instance, NPStream *stream)
   g_return_if_fail (stream != NULL);
 
   g_printerr ("Loading stream: %s\n", stream->url);
-  SWFDEC_LOADER (loader)->url = g_strdup (stream->url);
   loader->instance = instance;
   loader->stream = stream;
   if (stream->end)
     swfdec_loader_set_size (SWFDEC_LOADER (loader), stream->end);
 }
 
+void
+swfmoz_loader_ensure_open (SwfmozLoader *loader)
+{
+  g_return_if_fail (SWFMOZ_IS_LOADER (loader));
+
+  if (loader->open)
+    return;
+  swfdec_loader_open (SWFDEC_LOADER (loader), loader->stream->url);
+  loader->open = TRUE;
+}
+
 SwfdecLoader *
 swfmoz_loader_new (NPP instance, NPStream *stream)
 {
   SwfmozLoader *ret;
+  SwfdecURL *url;
 
   g_return_val_if_fail (stream != NULL, NULL);
 
-  ret = g_object_new (SWFMOZ_TYPE_LOADER, NULL);
+  url = swfdec_url_new (stream->url);
+  ret = g_object_new (SWFMOZ_TYPE_LOADER, "url", url, NULL);
+  swfdec_url_free (url);
   swfmoz_loader_set_stream (ret, instance, stream);
 
   return SWFDEC_LOADER (ret);

@@ -33,6 +33,12 @@ void		plugin_get_url_notify		(NPP		instance,
 						 const char *	url,
 						 const char *	target,
 						 void *		data);
+void		plugin_post_url_notify		(NPP		instance,
+						 const char *	url,
+						 const char *	target,
+						 const char *	data,
+						 guint		data_len,
+						 void *		user_data);
 
 void		plugin_invalidate_rect		(NPP		instance,
 						 NPRect *	rect);
