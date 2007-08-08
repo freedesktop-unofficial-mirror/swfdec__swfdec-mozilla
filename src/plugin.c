@@ -61,6 +61,12 @@ plugin_post_url_notify (NPP instance, const char *url,
 }
 
 void
+plugin_destroy_stream (NPP instance, NPStream *stream)
+{
+  CallNPN_DestroyStreamProc (mozilla_funcs.destroystream, instance, stream, NPRES_DONE);
+}
+
+void
 plugin_invalidate_rect (NPP instance, NPRect *rect)
 {
   CallNPN_InvalidateRectProc (mozilla_funcs.invalidaterect, instance, rect);
@@ -239,7 +245,7 @@ plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream,
 }
 
 static NPError 
-plugin_destroy_stream (NPP instance, NPStream* stream, NPReason reason)
+plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
 {
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -370,7 +376,7 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 
   plugin_funcs->newstream = NewNPP_NewStreamProc (plugin_new_stream);
   plugin_funcs->destroystream =
-      NewNPP_DestroyStreamProc (plugin_destroy_stream);
+      NewNPP_DestroyStreamProc (plugin_destroy_stream_cb);
   plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
   plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
