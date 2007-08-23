@@ -340,7 +340,7 @@ swfmoz_player_class_init (SwfmozPlayerClass *klass)
 static void
 swfmoz_player_init (SwfmozPlayer *player)
 {
-  player->player = swfdec_gtk_player_new ();
+  player->player = swfdec_gtk_player_new (NULL);
   g_signal_connect (player->player, "invalidate", G_CALLBACK (swfmoz_player_redraw), player);
   g_signal_connect (player->player, "launch", G_CALLBACK (swfmoz_player_launch), player);
   g_signal_connect (player->player, "notify", G_CALLBACK (swfmoz_player_notify), player);
