@@ -22,6 +22,7 @@
 #endif
 
 #include "swfmoz_player.h"
+#include <gdk/gdkkeysyms.h>
 
 /*** Plugin code ***/
 
@@ -62,6 +63,28 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	swfmoz_player_mouse_moved (player, winx, winy);
 	break;
       }
+    case KeyPress:
+    case KeyRelease:
+      {
+	/* try to mirror what the Gtk Widget does */
+	guint keyval = 0, keycode = 0;
+	XKeyEvent *key = (XKeyEvent *) event;
+	gdk_keymap_translate_keyboard_state (gdk_keymap_get_default (), key->keycode,
+	    key->state, 0, &keyval, NULL, NULL, NULL);
+	if (keyval >= GDK_A && keyval <= GDK_Z)
+	  keycode = keyval - GDK_A + SWFDEC_KEY_A;
+	if (keyval >= GDK_a && keyval <= GDK_z)
+	  keycode = keyval - GDK_a + SWFDEC_KEY_A;
+	keycode = swfdec_gtk_keycode_from_hardware_keycode (key->keycode);
+	if (keycode != 0) {
+	  if (event->type == KeyPress) {
+	    swfdec_player_key_press (player->player, keycode, gdk_keyval_to_unicode (keyval));
+	  } else {
+	    swfdec_player_key_release (player->player, keycode, gdk_keyval_to_unicode (keyval));
+	  }
+	}
+	break;
+      }
     default:
       g_printerr ("unhandled event %d\n", event->type);
       break;
@@ -100,7 +123,8 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
     attr.event_mask = GDK_VISIBILITY_NOTIFY_MASK | GDK_EXPOSURE_MASK | 
       GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK |
       GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | 
-      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
+      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_KEY_PRESS_MASK |
+      GDK_KEY_RELEASE_MASK;
     attr.x = 0;
     attr.y = 0;
     attr.width = width;
