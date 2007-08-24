@@ -1,4 +1,11 @@
 
+ 0.5.2 ("Something you can do with your finger")
+
+With keyboard support in Swfdec, it shouldn't be missed from the Mozilla plugin.
+- implement keyboard interaction
+- update to 0.5.2 API of Swfdec
+- fix some bugs (including crashers)
+
  0.5.1 ("Kick the baby")
 
 With Swfdec gaining support for the Stage actionscript object, some nifty new
