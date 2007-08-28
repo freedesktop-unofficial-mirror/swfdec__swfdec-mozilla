@@ -464,6 +464,73 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   }
 }
 
+static void
+swfdec_gtk_player_draw_pause (cairo_t *cr)
+{
+  cairo_pattern_t *pattern;
+#if 0
+#define ALPHA 0.447059
+#else
+#define ALPHA 0.6
+#endif
+
+  cairo_set_line_width (cr, 0.959352);
+  cairo_set_miter_limit (cr, 4);
+  cairo_set_line_cap (cr, 0);
+  cairo_set_line_join (cr, 0);
+  cairo_move_to (cr, 16.0003, 0.567675);
+  cairo_curve_to (cr, 7.44305, 0.567675, 0.505822, 7.53349, 0.505822, 16.1256);
+  cairo_curve_to (cr, 0.505822, 24.7178, 7.44305, 31.6836, 16.0003, 31.6836);
+  cairo_curve_to (cr, 24.5576, 31.6836, 31.4948, 24.7178, 31.4948, 16.1256);
+  cairo_curve_to (cr, 31.4948, 7.53349, 24.5576, 0.567675, 16.0003, 0.567675);
+  cairo_close_path (cr);
+  cairo_move_to (cr, 16.0003, 0.567675);
+  cairo_move_to (cr, 16.0607, 3.36325);
+  cairo_curve_to (cr, 22.984, 3.36325, 28.5953, 8.99503, 28.5953, 15.9433);
+  cairo_curve_to (cr, 28.5953, 22.8916, 22.984, 28.5234, 16.0607, 28.5234);
+  cairo_curve_to (cr, 9.13743, 28.5234, 3.49599, 22.8916, 3.49599, 15.9433);
+  cairo_curve_to (cr, 3.49599, 8.99503, 9.13743, 3.36325, 16.0607, 3.36325);
+  cairo_close_path (cr);
+  cairo_move_to (cr, 16.0607, 3.36325);
+  cairo_set_fill_rule (cr, 0);
+  cairo_set_source_rgba (cr, 0.827451, 0.843137, 0.811765, ALPHA);
+  cairo_fill_preserve (cr);
+  pattern = cairo_pattern_create_linear (24.906, 26.4817, 3.6134, 5.18912);
+  cairo_pattern_add_color_stop_rgba (pattern, 0, 0, 0, 0, ALPHA);
+  cairo_pattern_add_color_stop_rgba (pattern, 1, 1, 1, 1, ALPHA);
+  cairo_set_source (cr, pattern);
+  cairo_stroke (cr);
+  cairo_set_line_width (cr, 1);
+  cairo_set_miter_limit (cr, 4);
+  cairo_move_to (cr, 11.4927, 8.57249);
+  cairo_line_to (cr, 23.5787, 16.0226);
+  cairo_line_to (cr, 11.6273, 23.4948);
+  cairo_line_to (cr, 11.4927, 8.57249);
+  cairo_close_path (cr);
+  cairo_move_to (cr, 11.4927, 8.57249);
+  cairo_set_fill_rule (cr, 1);
+  cairo_set_source_rgba (cr, 0.827451, 0.843137, 0.811765, ALPHA);
+  cairo_fill_preserve (cr);
+  cairo_set_source (cr, pattern);
+  cairo_stroke (cr);
+#if 0
+  cairo_scale(cr, 1.18644, 1.20339);
+  cairo_translate (cr, -5.3063, -2.93549);
+  cairo_set_line_width (cr, 0.8369);
+  cairo_set_miter_limit (cr, 4);
+  cairo_move_to (cr, 28.461, 15.7365);
+  cairo_curve_to (cr, 28.4623, 21.4977, 23.7923, 26.1687, 18.0312, 26.1687);
+  cairo_curve_to (cr, 12.2701, 26.1687, 7.60014, 21.4977, 7.6014, 15.7365);
+  cairo_curve_to (cr, 7.60014, 9.97542, 12.2701, 5.30444, 18.0312, 5.30444);
+  cairo_curve_to (cr, 23.7923, 5.30444, 28.4623, 9.97542, 28.461, 15.7365);
+  cairo_close_path (cr);
+  cairo_move_to (cr, 28.461, 15.7365);
+  cairo_set_source (cr, pattern);
+  cairo_stroke (cr);
+#endif
+  cairo_pattern_destroy (pattern);
+}
+
 void
 swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
 {
@@ -503,16 +570,12 @@ swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
     int w = player->target_rect.width;
     int h = player->target_rect.height;
     int len = MIN (w, h) * 4 / 5;
-    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.6);
-    cairo_rectangle (cr, (w - len) / 2, (h - len) / 2,
-	len / 3, len);
-    cairo_rectangle (cr, (w - len) / 2 + 2 * len / 3, (h - len) / 2,
-	len / 3, len);
-    cairo_fill_preserve (cr);
     cairo_rectangle (cr, 0, 0, w, h);
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.4);
     cairo_fill (cr);
+    cairo_translate (cr, (w - len) / 2.0, (h - len) / 2.0);
+    cairo_scale (cr, len / 32.0, len / 32.0);
+    swfdec_gtk_player_draw_pause (cr);
   }
   cairo_destroy (cr);
   gdk_window_end_paint (player->target);
