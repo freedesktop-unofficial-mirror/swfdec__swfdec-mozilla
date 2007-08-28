@@ -40,6 +40,9 @@ void		plugin_post_url_notify		(NPP		instance,
 						 guint		data_len,
 						 void *		user_data);
 
+void		plugin_destroy_stream		(NPP		instance,
+						 NPStream *	stream);
+
 void		plugin_invalidate_rect		(NPP		instance,
 						 NPRect *	rect);
 

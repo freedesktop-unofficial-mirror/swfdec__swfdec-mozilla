@@ -1,4 +1,20 @@
 
+ 0.5.2 ("Something you can do with your finger")
+
+With keyboard support in Swfdec, it shouldn't be missed from the Mozilla plugin.
+- implement keyboard interaction
+- update to 0.5.2 API of Swfdec
+- fix some bugs (including crashers)
+
+ 0.5.1 ("Kick the baby")
+
+With Swfdec gaining support for the Stage actionscript object, some nifty new
+features are in:
+- implement "salign" and "scale" embed properties
+- scale movie to correct size
+- fix name to be 100% Adobe Flash compatible, so UFO detection script doesn't 
+  barf
+
  0.5.0 ("Destroy all the old prints in celebration")
 
 This is just a port of the API to Swfdec 0.5. The only feature is this:

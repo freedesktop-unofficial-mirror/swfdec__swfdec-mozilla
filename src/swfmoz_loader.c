@@ -64,6 +64,15 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 }
 
 static void
+swfmoz_loader_close (SwfdecLoader *loader)
+{
+  SwfmozLoader *moz = SWFMOZ_LOADER (loader);
+
+  if (moz->stream)
+    plugin_destroy_stream (moz->instance, moz->stream);
+}
+
+static void
 swfmoz_loader_class_init (SwfmozLoaderClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -72,6 +81,7 @@ swfmoz_loader_class_init (SwfmozLoaderClass *klass)
   object_class->dispose = swfmoz_loader_dispose;
 
   loader_class->load = swfmoz_loader_load;
+  loader_class->close = swfmoz_loader_close;
 }
 
 static void

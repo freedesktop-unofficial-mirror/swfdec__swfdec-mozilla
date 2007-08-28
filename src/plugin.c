@@ -57,7 +57,13 @@ plugin_post_url_notify (NPP instance, const char *url,
     const char *target, const char *data, guint data_len, void *user_data)
 {
   CallNPN_PostURLNotifyProc (mozilla_funcs.posturlnotify, instance, 
-      url, target, data_len, data, FALSE, user_data);
+      url, target, data_len, data ? data : "", FALSE, user_data);
+}
+
+void
+plugin_destroy_stream (NPP instance, NPStream *stream)
+{
+  CallNPN_DestroyStreamProc (mozilla_funcs.destroystream, instance, stream, NPRES_DONE);
 }
 
 void
@@ -153,12 +159,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
 	swfmoz_player_add_variables (instance->pdata, argv[i]);
-    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
-      if (argv[i]) {
-	char *question_mark = strchr (argv[i], '?');
-	if (question_mark)
-	  swfmoz_player_add_variables (instance->pdata, question_mark + 1);
-      }
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
       GdkColor color;
       if (gdk_color_parse (argv[i], &color)) {
@@ -166,6 +166,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	    0xFF000000 | (color.red / 0x101 << 16) | 
 	    (color.green / 0x101 << 8) | (color.blue / 0x101));
       }
+    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
@@ -175,6 +176,8 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	scale = SWFDEC_SCALE_NO_BORDER;
       } else if (g_ascii_strcasecmp (argv[i], "exactfit") == 0) {
 	scale = SWFDEC_SCALE_EXACT_FIT;
+      } else if (g_ascii_strcasecmp (argv[i], "noscale") == 0) {
+	scale = SWFDEC_SCALE_NONE;
       } else {
 	scale = SWFDEC_SCALE_SHOW_ALL;
       }
@@ -242,7 +245,7 @@ plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream,
 }
 
 static NPError 
-plugin_destroy_stream (NPP instance, NPStream* stream, NPReason reason)
+plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
 {
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -373,7 +376,7 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 
   plugin_funcs->newstream = NewNPP_NewStreamProc (plugin_new_stream);
   plugin_funcs->destroystream =
-      NewNPP_DestroyStreamProc (plugin_destroy_stream);
+      NewNPP_DestroyStreamProc (plugin_destroy_stream_cb);
   plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
   plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
