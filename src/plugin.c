@@ -252,9 +252,9 @@ plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
   if (!SWFMOZ_IS_LOADER (stream->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  SWFMOZ_LOADER (stream->pdata)->stream = NULL;
   swfmoz_loader_ensure_open (stream->pdata);
   swfdec_loader_eof (stream->pdata);
+  SWFMOZ_LOADER (stream->pdata)->stream = NULL;
   g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
 }
