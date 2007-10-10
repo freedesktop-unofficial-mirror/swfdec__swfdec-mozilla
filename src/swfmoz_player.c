@@ -138,50 +138,65 @@ static gboolean
 swfmoz_player_idle_redraw (gpointer playerp)
 {
   SwfmozPlayer *player = playerp;
+  GdkRegion *region;
 
-  swfmoz_player_render (player, player->x, player->y, player->width, player->height);
+  region = player->repaint;
+  if (region) {
+    player->repaint = NULL;
+    g_source_destroy (player->repaint_source);
+    g_source_unref (player->repaint_source);
+    player->repaint_source = NULL;
+    swfmoz_player_render (player, region);
+    gdk_region_destroy (region);
+  }
+
   return TRUE;
 }
 
 static void
-swfmoz_player_redraw (SwfdecPlayer *swfplayer, double x, double y, 
-    double width, double height, SwfmozPlayer *player)
+swfmoz_player_redraw (SwfdecPlayer *swfplayer, const SwfdecRectangle *extents, 
+    const SwfdecRectangle *rects, guint n_rects, SwfmozPlayer *player)
 {
-  int xi, yi, wi, hi;
+  GdkRegion *region;
+  guint i;
 
-  xi = MAX ((int) floor (x), 0);
-  yi = MAX ((int) floor (y), 0);
-  wi = (int) ceil (x + width) - xi;
-  hi = (int) ceil (y + height) - yi;
-  if (wi <= 0 || hi <= 0)
-    return;
+  if (player->repaint)
+    region = player->repaint;
+  else
+    region = gdk_region_new ();
 
-  xi += player->target_rect.x;
-  yi += player->target_rect.y;
+  for (i = 0; i < n_rects; i++) {
+    gdk_region_union_with_rect (region, (GdkRectangle *) &rects[i]);
+  }
+
   if (player->windowless) {
     NPRect rect;
-    rect.left = xi;
-    rect.top = yi;
-    rect.right = xi + wi;
-    rect.bottom = yi + hi;
-    plugin_invalidate_rect (player->instance, &rect);
-  } else if (player->repaint_source) {
-    player->width = MAX (player->x + player->width, xi + wi);
-    player->height = MAX (player->y + player->height, yi + hi);
-    player->x = MIN (player->x, xi);
-    player->y = MIN (player->y, yi);
-    player->width -= player->x;
-    player->height -= player->y;
+    GdkRectangle *rectangles;
+    int n_rectangles;
+
+    g_assert (player->repaint == NULL);
+    
+    gdk_region_get_rectangles (region, &rectangles, &n_rectangles);
+
+    for (i = 0; i < (guint) n_rectangles; i++) {
+      rect.left = rectangles[i].x;
+      rect.top = rectangles[i].y;
+      rect.right = rectangles[i].x + rectangles[i].width;
+      rect.bottom = rectangles[i].y + rectangles[i].height;
+      plugin_invalidate_rect (player->instance, &rect);
+    }
+    gdk_region_destroy (region);
   } else {
-    GSource *source = g_idle_source_new ();
-    player->repaint_source = source;
-    g_source_set_priority (source, GDK_PRIORITY_REDRAW);
-    g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
-    g_source_attach (source, player->context);
-    player->x = xi;
-    player->y = yi;
-    player->width = wi;
-    player->height = hi;
+    if (player->repaint_source) {
+      g_assert (player->repaint);
+    } else {
+      GSource *source = g_idle_source_new ();
+      player->repaint_source = source;
+      g_source_set_priority (source, GDK_PRIORITY_REDRAW);
+      g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
+      g_source_attach (source, player->context);
+      player->repaint = region;
+    }
   }
 }
 
@@ -195,8 +210,8 @@ swfmoz_player_launch (SwfdecPlayer *swfplayer, const char *url, const char *targ
 static void
 swfmoz_player_invalidate (SwfmozPlayer *player)
 {
-  swfmoz_player_redraw (player->player, 0.0, 0.0, player->target_rect.width, 
-      player->target_rect.height, player);
+  SwfdecRectangle rect = { 0, 0, player->target_rect.width, player->target_rect.height };
+  swfmoz_player_redraw (player->player, &rect, &rect, 1, player);
 }
 
 /* function stolen from SwfdecGtkWidget */
@@ -313,6 +328,8 @@ swfmoz_player_dispose (GObject *object)
     g_source_destroy (player->repaint_source);
     g_source_unref (player->repaint_source);
     player->repaint_source = NULL;
+    gdk_region_destroy (player->repaint);
+    player->repaint = NULL;
   }
   if (player->initial) {
     g_object_unref (player->initial);
@@ -532,39 +549,42 @@ swfdec_gtk_player_draw_pause (cairo_t *cr)
 }
 
 void
-swfmoz_player_render (SwfmozPlayer *player, int x, int y, int width, int height)
+swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
 {
   GdkRectangle rect;
   cairo_t *cr;
 
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
-  g_return_if_fail (x >= 0);
-  g_return_if_fail (y >= 0);
-  g_return_if_fail (width > 0);
-  g_return_if_fail (height > 0);
+  g_return_if_fail (!gdk_region_empty (region));
 
-  /* first, remove the idle source */
-  if (player->repaint_source && x <= player->x && y <= player->y &&
-      x + width >= player->x + player->width &&
-      y + height >= player->y + player->height) {
-    g_source_destroy (player->repaint_source);
-    g_source_unref (player->repaint_source);
-    player->repaint_source = NULL;
+  /* first, remove the repainted stuff from the stuff that needs a redraw */
+  if (player->repaint) {
+
+    g_assert (player->repaint_source);
+    gdk_region_subtract (player->repaint, region);
+
+    if (gdk_region_empty (player->repaint)) {
+      g_source_destroy (player->repaint_source);
+      g_source_unref (player->repaint_source);
+      player->repaint_source = NULL;
+      gdk_region_destroy (player->repaint);
+      player->repaint = NULL;
+    }
   }
 
   /* second, check if we have anything to draw */
   if (player->target == NULL)
     return;
-  rect.x = x + player->target_rect.x;
-  rect.y = y + player->target_rect.y;
-  rect.width = width;
-  rect.height = height;
 
   /* paint it */
-  gdk_window_begin_paint_rect (player->target, &rect);
+  gdk_window_begin_paint_region (player->target, region);
   cr = gdk_cairo_create (player->target);
+  gdk_cairo_region (cr, region);
+  cairo_clip (cr);
   cairo_translate (cr, player->target_rect.x, player->target_rect.y);
-  swfdec_player_render (player->player, cr, x, y, rect.width, rect.height);
+  gdk_region_get_clipbox (region, &rect);
+  swfdec_player_render (player->player, cr, rect.x - player->target_rect.x,
+      rect.y - player->target_rect.y, rect.width, rect.height);
   /* paint optional pause sign */
   if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
     int w = player->target_rect.width;

@@ -63,10 +63,7 @@ struct _SwfmozPlayer {
 
   /* for windowed operation */
   GSource *		repaint_source;		/* set when repaint is necessary */
-  int			x;			/* area to repaint */
-  int			y;
-  int			width;
-  int			height;
+  GdkRegion *		repaint;		/* area to repaint or NULL if none */
 
   /* Gtk stuff */
   GtkMenu *		menu;			/* right-click menu */
@@ -92,10 +89,7 @@ void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 int			width,
 						 int			height);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
-						 int			x,
-						 int			y,
-						 int			width,
-						 int			height);
+						 GdkRegion *		region);
 gboolean	swfmoz_player_mouse_changed	(SwfmozPlayer *		player,
 						 int			button,
 						 int			x,

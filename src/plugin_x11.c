@@ -34,13 +34,22 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 
   switch (event->type) {
     case VisibilityNotify:
-      swfmoz_player_render (player, 0, 0, player->target_rect.width, player->target_rect.height);
-      break;
+      {
+	GdkRectangle rect = { 0, 0, player->target_rect.width, player->target_rect.height };
+	GdkRegion *region;
+	region = gdk_region_rectangle (&rect);
+	swfmoz_player_render (player, region);
+	gdk_region_destroy (region);
+	break;
+      }
     case Expose:
       {
 	XExposeEvent *expose = (XExposeEvent *) event;
-	swfmoz_player_render (player, expose->x, expose->y, 
-	    expose->width, expose->height);
+	GdkRectangle rect = { expose->x, expose->y, expose->width, expose->height };
+	GdkRegion *region;
+	region = gdk_region_rectangle (&rect);
+	swfmoz_player_render (player, region);
+	gdk_region_destroy (region);
 	break;
       }
     case ButtonPress:
