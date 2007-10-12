@@ -1,4 +1,10 @@
 
+ 0.5.3 ("I like Hello Kitty Island Adventure a lot more than this stuff")
+
+Another release of Swfdec, another release of the plugin.
+- update API to match libswfdec
+- new play icon
+
  0.5.2 ("Something you can do with your finger")
 
 With keyboard support in Swfdec, it shouldn't be missed from the Mozilla plugin.
