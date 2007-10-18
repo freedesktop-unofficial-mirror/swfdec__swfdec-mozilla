@@ -53,6 +53,14 @@ plugin_get_url_notify (NPP instance, const char *url,
 }
 
 void
+plugin_post_url (NPP instance, const char *url,
+    const char *target, const char *data, guint data_len)
+{
+  CallNPN_PostURLProc (mozilla_funcs.posturl, instance, 
+      url, target, data_len, data ? data : "", FALSE);
+}
+
+void
 plugin_post_url_notify (NPP instance, const char *url,
     const char *target, const char *data, guint data_len, void *user_data)
 {

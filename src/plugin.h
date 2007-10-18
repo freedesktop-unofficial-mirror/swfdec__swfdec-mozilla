@@ -33,6 +33,11 @@ void		plugin_get_url_notify		(NPP		instance,
 						 const char *	url,
 						 const char *	target,
 						 void *		data);
+void		plugin_post_url			(NPP		instance,
+						 const char *	url,
+						 const char *	target,
+						 const char *	data,
+						 guint		data_len);
 void		plugin_post_url_notify		(NPP		instance,
 						 const char *	url,
 						 const char *	target,
