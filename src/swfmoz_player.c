@@ -201,10 +201,19 @@ swfmoz_player_redraw (SwfdecPlayer *swfplayer, const SwfdecRectangle *extents,
 }
 
 static void
-swfmoz_player_launch (SwfdecPlayer *swfplayer, const char *url, const char *target,
-    SwfmozPlayer *player)
+swfmoz_player_launch (SwfdecPlayer *swfplayer, SwfdecLoaderRequest request, 
+    const char *url, const char *target, SwfdecBuffer *data, SwfmozPlayer *player)
 {
-  plugin_get_url (player->instance, url, target);
+  if (request == SWFDEC_LOADER_REQUEST_POST) {
+    if (data) {
+      plugin_post_url (player->instance, url, target, 
+	  (const char *) data->data, data->length);
+    } else {
+      plugin_post_url (player->instance, url, target, NULL, 0);
+    }
+  } else {
+    plugin_get_url (player->instance, url, target);
+  }
 }
 
 static void
