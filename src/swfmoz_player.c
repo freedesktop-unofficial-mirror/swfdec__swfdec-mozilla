@@ -69,9 +69,16 @@ swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
     "Eric Anholt <eric@anholt.net>",
     NULL,
   };
+  static const char *artists[] = {
+    "Andreas Nilsson <andreas@andreasn.se>",
+    "Cristian Grada <krigenator@gmail.com>",
+    NULL
+  };
+
   gtk_show_about_dialog (NULL, "program-name", "Swfdec",
       "logo-icon-name", "swfdec",
       "authors", authors,
+      "artists", artists,
       "comments", "Play Flash content in your browser",
       "name", "Swfdec Mozilla Plugin",
       "version", VERSION,
