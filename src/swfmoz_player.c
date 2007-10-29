@@ -625,6 +625,15 @@ swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gbo
 
   switch (button) {
     case 1:
+      if (player->menu != NULL) {
+	g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
+	    swfmoz_player_menu_notify_playing, NULL);
+	g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
+	    swfmoz_player_menu_notify_audio, NULL);
+	gtk_widget_destroy (GTK_WIDGET (player->menu));
+	player->menu = NULL;
+	return TRUE;
+      }
       if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
 	if (!down)
 	  return FALSE;
