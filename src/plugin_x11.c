@@ -94,6 +94,13 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	}
 	break;
       }
+    case ConfigureNotify:
+      {
+	XConfigureEvent *conf = (XConfigureEvent *) event;
+
+	swfmoz_player_set_target (player, player->target, 0, 0, conf->width, conf->height);
+	break;
+      }
     default:
       g_printerr ("unhandled event %d\n", event->type);
       break;
