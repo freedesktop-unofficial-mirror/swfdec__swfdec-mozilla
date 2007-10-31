@@ -97,7 +97,7 @@ plugin_pop_allow_popups (NPP instance)
 char *
 NP_GetMIMEDescription (void)
 {
-  return "application/x-shockwave-flash:.swf:Adobe Flash movie";
+  return "application/x-shockwave-flash:.swf:Adobe Flash movie;application/futuresplash:.spl:FutureSplash movie";
 }
 
 NPError 
