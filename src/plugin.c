@@ -128,22 +128,31 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
   return NPERR_NO_ERROR;
 }
 
-static gboolean
-make_sure_this_thing_stays_in_memory (void)
+/* This mess is unfortunately necessary */
+#define PLUGIN_FILE PLUGIN_DIR G_DIR_SEPARATOR_S "libswfdecmozilla." G_MODULE_SUFFIX
+G_MODULE_EXPORT gboolean
+swfdec_mozilla_make_sure_this_thing_stays_in_memory (void)
 {
   static gboolean inited = FALSE;
   GModule *module;
+  gpointer check;
     
   if (inited)
     return TRUE;
-  inited = TRUE;
   if (!g_module_supported ())
     return FALSE;
-  module = g_module_open (PLUGIN_DIR G_DIR_SEPARATOR_S "libswfdecmozilla." G_MODULE_SUFFIX, 0);
+  module = g_module_open (PLUGIN_FILE, 0);
   if (module == NULL)
     return FALSE;
+  /* now load this function name to be sure it we've loaded ourselves */
+  if (!g_module_symbol (module, "swfdec_mozilla_make_sure_this_thing_stays_in_memory", &check) ||
+      check != swfdec_mozilla_make_sure_this_thing_stays_in_memory) {
+    g_module_close (module);
+    return FALSE;
+  }
   g_module_make_resident (module);
   g_module_close (module);
+  inited = TRUE;
   return TRUE;
 }
 
@@ -157,8 +166,12 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if (!make_sure_this_thing_stays_in_memory ())
+  if (!swfdec_mozilla_make_sure_this_thing_stays_in_memory ()) {
+    g_printerr ("Ensuring the plugin stays in memory did not work.\n"
+	        "This happens when the plugin was copied from its installed location at " PLUGIN_FILE ".\n"
+		"Please use the --with-plugin-dir configure option to install it into a different place.\n");
     return NPERR_INVALID_INSTANCE_ERROR;
+  }
 #if 0
   /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work
    * probably needs user agent sniffing to make this work correctly (iff gecko 
