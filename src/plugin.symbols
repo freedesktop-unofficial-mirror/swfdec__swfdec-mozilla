@@ -2,3 +2,4 @@ NP_GetMIMEDescription
 NP_GetValue
 NP_Initialize
 NP_Shutdown
+swfdec_mozilla_make_sure_this_thing_stays_in_memory
