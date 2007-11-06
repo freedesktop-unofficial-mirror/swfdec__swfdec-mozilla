@@ -2,10 +2,11 @@ plugindir = $(PLUGIN_DIR)
 plugin_LTLIBRARIES = libswfdecmozilla.la
 
 libswfdecmozilla_la_CFLAGS = $(GLOBAL_CFLAGS) $(MOZILLA_CFLAGS) $(SWFDEC_CFLAGS) \
-	$(AUDIO_CFLAGS) $(CAIRO_CFLAGS) $(GTK_CFLAGS)
+	-DPLUGIN_DIR=\""$(PLUGIN_DIR)"\"
+
 libswfdecmozilla_la_LDFLAGS = \
 	-module -avoid-version -export-symbols $(srcdir)/plugin.symbols \
-	$(SWFDEC_LIBS) $(AUDIO_LIBS) $(CAIRO_LIBS) $(GTK_LIBS)
+	$(SWFDEC_LIBS)
 
 libswfdecmozilla_la_SOURCES = \
 	plugin.c \

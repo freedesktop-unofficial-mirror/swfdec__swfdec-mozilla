@@ -128,6 +128,25 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
   return NPERR_NO_ERROR;
 }
 
+static gboolean
+make_sure_this_thing_stays_in_memory (void)
+{
+  static gboolean inited = FALSE;
+  GModule *module;
+    
+  if (inited)
+    return TRUE;
+  inited = TRUE;
+  if (!g_module_supported ())
+    return FALSE;
+  module = g_module_open (PLUGIN_DIR G_DIR_SEPARATOR_S "libswfdecmozilla." G_MODULE_SUFFIX, 0);
+  if (module == NULL)
+    return FALSE;
+  g_module_make_resident (module);
+  g_module_close (module);
+  return TRUE;
+}
+
 static NPError
 plugin_new (NPMIMEType mime_type, NPP instance,
     uint16_t mode, int16_t argc, char *argn[], char *argv[],
@@ -138,9 +157,8 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
-	NPPVpluginKeepLibraryInMemory, (void *) PR_TRUE))
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  if (!make_sure_this_thing_stays_in_memory ())
+    return NPERR_INVALID_INSTANCE_ERROR;
 #if 0
   /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work
    * probably needs user agent sniffing to make this work correctly (iff gecko 
@@ -404,7 +422,7 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 NPError
 NP_Shutdown (void)
 {
-  g_printerr ("You should not see this text until you've closed your browser\n");
+  /* Haha, we stay in memory anyway, no way to get rid of us! */
   return NPERR_NO_ERROR;
 }
 

@@ -58,7 +58,7 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 SWFDEC_REQUIRES=0.5.3.1
-PKG_CHECK_MODULES(SWFDEC, swfdec-gtk-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+PKG_CHECK_MODULES(SWFDEC, gmodule-2.0 swfdec-gtk-$SWFDEC_MAJORMINOR = $SWFDEC_REQUIRES, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
 if test "$HAVE_SWFDEC" = "no"; then
   AC_MSG_ERROR([cannot find swfdec-$SWFDEC_MAJORMINOR $SWFDEC_REQUIRES, which is required for build])
 fi
