@@ -1,4 +1,11 @@
 
+ 0.5.4 ("Ultravibe Pleasure 2000")
+
+This release brings some stabiliy improvements.
+- add FutureSplash mime type
+- update API to match Swfdec
+- some serious bugs fixed
+
  0.5.3 ("I like Hello Kitty Island Adventure a lot more than this stuff")
 
 Another release of Swfdec, another release of the plugin.
