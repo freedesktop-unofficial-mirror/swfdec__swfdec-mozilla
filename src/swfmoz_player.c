@@ -481,7 +481,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
     int x, int y, int width, int height)
 {
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
-  g_return_if_fail (GDK_IS_WINDOW (target));
+  g_return_if_fail (target == NULL || GDK_IS_WINDOW (target));
 
   if (player->target) {
     g_object_unref (player->target);
