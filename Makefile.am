@@ -8,6 +8,7 @@ EXTRA_DIST = \
 	depcomp \
 	AUTHORS \
 	COPYING \
+	MAINTAINERS \
 	README \
 	ChangeLog \
 	autogen.sh \
