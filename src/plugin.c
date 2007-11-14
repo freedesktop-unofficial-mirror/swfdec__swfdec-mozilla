@@ -260,7 +260,9 @@ plugin_destroy (NPP instance, NPSavedData **save)
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
+  plugin_x11_teardown (instance->pdata);
   swfmoz_player_remove (instance->pdata);
+  instance->pdata = NULL;
   return NPERR_NO_ERROR;
 }
 
