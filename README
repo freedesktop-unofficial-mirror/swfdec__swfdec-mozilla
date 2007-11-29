@@ -19,14 +19,9 @@ Notes:
    browsers by adding /usr/local/lib/mozilla/plugins to the
    MOZ_PLUGIN_PATH environment variable.
  
- - Sound output is provided by libswfdec-gtk. It is currently only 
-   available for ALSA. If you want a different output, feel 
-   encouraged to provide patches.
-
 
 Dependencies:
 
-  swfdec (= 0.4.4)
-  swfdec-gtk (= 0.4.4)
-  Mozilla (>= 1.0.0)
+  swfdec (= 0.5.4)
+  swfdec-gtk (= 0.5.4)
 
