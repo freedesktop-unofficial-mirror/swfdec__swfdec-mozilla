@@ -59,7 +59,6 @@ struct _SwfmozPlayer {
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   GdkWindow *		target;			/* what we draw to */
   GdkRectangle		target_rect;		/* area in target that this plugin occupies */
-  gboolean		mouse_down;		/* saved state for the mouse */
 
   /* for windowed operation */
   GSource *		repaint_source;		/* set when repaint is necessary */
@@ -90,12 +89,15 @@ void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 int			height);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
 						 GdkRegion *		region);
-gboolean	swfmoz_player_mouse_changed	(SwfmozPlayer *		player,
-						 int			button,
+gboolean	swfmoz_player_mouse_press	(SwfmozPlayer *		player,
 						 int			x,
 						 int			y,
-						 gboolean		down);
-gboolean	swfmoz_player_mouse_moved	(SwfmozPlayer *		player,
+						 guint			button);
+gboolean	swfmoz_player_mouse_release	(SwfmozPlayer *		player,
+						 int			x,
+						 int			y,
+						 guint			button);
+gboolean	swfmoz_player_mouse_move	(SwfmozPlayer *		player,
 						 int			x,
 						 int			y);
 

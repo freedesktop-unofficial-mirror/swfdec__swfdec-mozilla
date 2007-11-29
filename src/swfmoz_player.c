@@ -626,50 +626,63 @@ swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
 }
 
 gboolean
-swfmoz_player_mouse_changed (SwfmozPlayer *player, int button, int x, int y, gboolean down)
+swfmoz_player_mouse_press (SwfmozPlayer *player, int x, int y, guint button)
 {
+  gboolean ret = FALSE;
+
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
 
-  switch (button) {
-    case 1:
-      if (player->menu != NULL) {
-	g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
-	    swfmoz_player_menu_notify_playing, NULL);
-	g_signal_handlers_disconnect_matched (player->player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
-	    swfmoz_player_menu_notify_audio, NULL);
-	gtk_widget_destroy (GTK_WIDGET (player->menu));
-	player->menu = NULL;
-	return TRUE;
-      }
-      if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
-	if (!down)
-	  return FALSE;
-	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player->player), TRUE);
-      } else {
-	player->mouse_down = down;
-	plugin_push_allow_popups (player->instance, TRUE);
-	swfdec_player_handle_mouse (player->player, x, y, down ? 1 : 0);
-	plugin_pop_allow_popups (player->instance);
-      }
-      return TRUE;
-    case 3:
-      if (!down) {
-	swfmoz_player_popup_menu (player);
-	return TRUE;
-      }
-    default:
-      break;
+  if (button > 32)
+    return FALSE;
+
+  if (player->menu && GTK_WIDGET_VISIBLE (player->menu))
+    gtk_menu_popdown (GTK_MENU (player->menu));
+
+  if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
+    plugin_push_allow_popups (player->instance, TRUE);
+    ret = swfdec_player_mouse_press (player->player, x, y, button);
+    plugin_pop_allow_popups (player->instance);
   }
-  return FALSE;
+  return ret;
 }
 
 gboolean
-swfmoz_player_mouse_moved (SwfmozPlayer *player, int x, int y)
+swfmoz_player_mouse_release (SwfmozPlayer *player, int x, int y, guint button)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
+
+  if (button > 32)
+    return FALSE;
+
+  if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
+    plugin_push_allow_popups (player->instance, TRUE);
+    ret = swfdec_player_mouse_release (player->player, x, y, button);
+    plugin_pop_allow_popups (player->instance);
+  } else {
+    if (button == 1) {
+      swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player->player), TRUE);
+      ret = TRUE;
+    } else {
+      ret = FALSE;
+    }
+  }
+
+  if (button == 3) {
+    swfmoz_player_popup_menu (player);
+    ret = TRUE;
+  }
+  return ret;
+}
+
+gboolean
+swfmoz_player_mouse_move (SwfmozPlayer *player, int x, int y)
 {
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
 
   if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player->player))) {
-    swfdec_player_handle_mouse (player->player, x, y, player->mouse_down ? 1 : 0);
+    swfdec_player_mouse_move (player->player, x, y);
   }
   return FALSE;
 }

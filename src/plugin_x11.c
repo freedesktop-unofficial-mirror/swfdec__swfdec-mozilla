@@ -53,11 +53,15 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	break;
       }
     case ButtonPress:
+      {
+	XButtonEvent *button = (XButtonEvent *) event;
+	swfmoz_player_mouse_press (player, button->x, button->y, button->button);
+	break;
+      }
     case ButtonRelease:
       {
 	XButtonEvent *button = (XButtonEvent *) event;
-	swfmoz_player_mouse_changed (player, button->button, button->x, 
-	    button->y, event->type == ButtonPress);
+	swfmoz_player_mouse_release (player, button->x, button->y, button->button);
 	break;
       }
     case EnterNotify:
@@ -69,7 +73,7 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	int winx, winy;
 
 	gdk_window_get_pointer (player->target, &winx, &winy, NULL);
-	swfmoz_player_mouse_moved (player, winx, winy);
+	swfmoz_player_mouse_move (player, winx, winy);
 	break;
       }
     case KeyPress:
