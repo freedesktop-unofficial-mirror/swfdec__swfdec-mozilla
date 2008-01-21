@@ -48,7 +48,7 @@ swfmoz_loader_dispose (GObject *object)
 
 static void
 swfmoz_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, 
-    SwfdecLoaderRequest request, const char *data, gsize data_len)
+    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
   const char *url;
@@ -57,16 +57,21 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
   g_object_ref (moz);
   url = swfdec_url_get_url (swfdec_loader_get_url (loader));
   if (request == SWFDEC_LOADER_REQUEST_POST) {
-    plugin_post_url_notify (moz->instance, url, NULL, data, data_len, moz);
+    if (buffer) {
+      plugin_post_url_notify (moz->instance, url, NULL, 
+	  (char *) buffer->data, buffer->length, moz);
+    } else {
+      plugin_post_url_notify (moz->instance, url, NULL, NULL, 0, moz);
+    }
   } else {
     plugin_get_url_notify (moz->instance, url, NULL, moz);
   }
 }
 
 static void
-swfmoz_loader_close (SwfdecLoader *loader)
+swfmoz_loader_close (SwfdecStream *stream)
 {
-  SwfmozLoader *moz = SWFMOZ_LOADER (loader);
+  SwfmozLoader *moz = SWFMOZ_LOADER (stream);
 
   if (moz->stream)
     plugin_destroy_stream (moz->instance, moz->stream);
@@ -76,12 +81,14 @@ static void
 swfmoz_loader_class_init (SwfmozLoaderClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecStreamClass *stream_class = SWFDEC_STREAM_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
 
   object_class->dispose = swfmoz_loader_dispose;
 
+  stream_class->close = swfmoz_loader_close;
+
   loader_class->load = swfmoz_loader_load;
-  loader_class->close = swfmoz_loader_close;
 }
 
 static void
@@ -111,7 +118,8 @@ swfmoz_loader_ensure_open (SwfmozLoader *loader)
 
   if (loader->open)
     return;
-  swfdec_loader_open (SWFDEC_LOADER (loader), loader->stream->url);
+  swfdec_loader_set_url (SWFDEC_LOADER (loader), loader->stream->url);
+  swfdec_stream_open (SWFDEC_STREAM (loader));
   loader->open = TRUE;
 }
 

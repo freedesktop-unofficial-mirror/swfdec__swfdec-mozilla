@@ -402,7 +402,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
 {
   char *filename = swfdec_loader_get_filename (loader);
   glong percent;
-  gboolean eof;
+  gboolean eof, error;
 
   percent = swfdec_loader_get_size (loader);
   if (percent == 0) {
@@ -414,14 +414,14 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     percent = CLAMP (percent, 0, 100);
   }
   /* FIXME: swfdec needs a function for this */
-  g_object_get (G_OBJECT (loader), "eof", &eof, NULL);
+  g_object_get (G_OBJECT (loader), "eof", &eof, "error", &error, NULL);
 
   gtk_list_store_set (store, iter,
     SWFMOZ_LOADER_COLUMN_LOADER, loader,
     SWFMOZ_LOADER_COLUMN_NAME, filename,
     SWFMOZ_LOADER_COLUMN_URL, swfdec_url_get_url (swfdec_loader_get_url (loader)),
     SWFMOZ_LOADER_COLUMN_EOF, eof,
-    SWFMOZ_LOADER_COLUMN_ERROR, loader->error != NULL,
+    SWFMOZ_LOADER_COLUMN_ERROR, error,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
     SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, (guint) percent,
     -1);

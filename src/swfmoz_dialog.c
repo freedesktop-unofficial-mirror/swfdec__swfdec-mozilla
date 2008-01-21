@@ -99,6 +99,7 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
   SwfmozLoader *loader;
   GtkWidget *chooser;
   char *s, *filename;
+  gboolean error;
 
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (dialog->media));
   /* FIXME: assert this doesn't happen? */
@@ -107,7 +108,8 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
   
   gtk_tree_model_get (model, &iter, SWFMOZ_LOADER_COLUMN_LOADER, &loader, -1);
   g_object_unref (loader);
-  if (SWFDEC_LOADER (loader)->error != NULL) {
+  g_object_get (loader, "error", &error, NULL);
+  if (error) {
     /* FIXME: make it impossible that this happens by disabling this button for 
      * error cases. But that requires monitoring the selection, and I'm lazy */
     return;

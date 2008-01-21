@@ -294,7 +294,7 @@ plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   swfmoz_loader_ensure_open (stream->pdata);
-  swfdec_loader_eof (stream->pdata);
+  swfdec_stream_eof (stream->pdata);
   SWFMOZ_LOADER (stream->pdata)->stream = NULL;
   g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
@@ -325,7 +325,7 @@ plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buf
   new->length = len;
   new->data = g_memdup (buffer, len);
   swfmoz_loader_ensure_open (stream->pdata);
-  swfdec_loader_push (stream->pdata, new);
+  swfdec_stream_push (stream->pdata, new);
   return len;
 }
 
@@ -372,14 +372,14 @@ plugin_handle_event (NPP instance, void *eventp)
 static void
 plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-  SwfdecLoader *loader = SWFDEC_LOADER (notifyData);
+  SwfdecStream *stream = SWFDEC_STREAM (notifyData);
 
   if (reason == NPRES_NETWORK_ERR) {
-    swfdec_loader_error (loader, "Network error");
+    swfdec_stream_error (stream, "Network error");
   } else if (reason == NPRES_USER_BREAK) {
-    swfdec_loader_error (loader, "User interrupt");
+    swfdec_stream_error (stream, "User interrupt");
   }
-  g_object_unref (loader);
+  g_object_unref (stream);
 }
 
 NPError
