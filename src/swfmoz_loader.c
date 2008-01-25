@@ -73,7 +73,6 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
       plugin_get_url_notify (moz->instance, url, NULL, moz);
     }
   }
-  swfmoz_player_add_loader (mozplay, moz);
 }
 
 static void
@@ -126,6 +125,7 @@ swfmoz_loader_ensure_open (SwfmozLoader *loader)
   if (loader->open)
     return;
   swfdec_loader_set_url (SWFDEC_LOADER (loader), loader->stream->url);
+  swfmoz_player_add_loader (loader->instance->pdata, loader);
   swfdec_stream_open (SWFDEC_STREAM (loader));
   loader->open = TRUE;
 }
