@@ -29,16 +29,17 @@
 static GdkFilterReturn
 plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer playerp)
 {
-  SwfmozPlayer *player = playerp;
+  SwfdecPlayer *player = playerp;
+  SwfmozPlayer *mozplay = playerp;
   XEvent *event = gdkxevent;
 
   switch (event->type) {
     case VisibilityNotify:
       {
-	GdkRectangle rect = { 0, 0, player->target_rect.width, player->target_rect.height };
+	GdkRectangle rect = { 0, 0, mozplay->target_rect.width, mozplay->target_rect.height };
 	GdkRegion *region;
 	region = gdk_region_rectangle (&rect);
-	swfmoz_player_render (player, region);
+	swfmoz_player_render (mozplay, region);
 	gdk_region_destroy (region);
 	break;
       }
@@ -48,20 +49,20 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	GdkRectangle rect = { expose->x, expose->y, expose->width, expose->height };
 	GdkRegion *region;
 	region = gdk_region_rectangle (&rect);
-	swfmoz_player_render (player, region);
+	swfmoz_player_render (mozplay, region);
 	gdk_region_destroy (region);
 	break;
       }
     case ButtonPress:
       {
 	XButtonEvent *button = (XButtonEvent *) event;
-	swfmoz_player_mouse_press (player, button->x, button->y, button->button);
+	swfmoz_player_mouse_press (mozplay, button->x, button->y, button->button);
 	break;
       }
     case ButtonRelease:
       {
 	XButtonEvent *button = (XButtonEvent *) event;
-	swfmoz_player_mouse_release (player, button->x, button->y, button->button);
+	swfmoz_player_mouse_release (mozplay, button->x, button->y, button->button);
 	break;
       }
     case EnterNotify:
@@ -72,8 +73,8 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
       {
 	int winx, winy;
 
-	gdk_window_get_pointer (player->target, &winx, &winy, NULL);
-	swfmoz_player_mouse_move (player, winx, winy);
+	gdk_window_get_pointer (mozplay->target, &winx, &winy, NULL);
+	swfmoz_player_mouse_move (mozplay, winx, winy);
 	break;
       }
     case KeyPress:
@@ -91,9 +92,9 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 	keycode = swfdec_gtk_keycode_from_hardware_keycode (key->keycode);
 	if (keycode != 0) {
 	  if (event->type == KeyPress) {
-	    swfdec_player_key_press (player->player, keycode, gdk_keyval_to_unicode (keyval));
+	    swfdec_player_key_press (player, keycode, gdk_keyval_to_unicode (keyval));
 	  } else {
-	    swfdec_player_key_release (player->player, keycode, gdk_keyval_to_unicode (keyval));
+	    swfdec_player_key_release (player, keycode, gdk_keyval_to_unicode (keyval));
 	  }
 	}
 	break;
@@ -102,7 +103,7 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
       {
 	XConfigureEvent *conf = (XConfigureEvent *) event;
 
-	swfmoz_player_set_target (player, player->target, 0, 0, conf->width, conf->height);
+	swfmoz_player_set_target (mozplay, mozplay->target, 0, 0, conf->width, conf->height);
 	break;
       }
     default:
@@ -155,8 +156,8 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
     gdk_window_add_filter (window, plugin_x11_handle_event, player);
     gdk_window_show (window);
     swfmoz_player_set_target (player, window, 0, 0, width, height);
-    plugin_x11_notify_cb (player->player, NULL, window);
-    g_signal_connect (player->player, "notify::background-color", 
+    plugin_x11_notify_cb (SWFDEC_PLAYER (player), NULL, window);
+    g_signal_connect (player, "notify::background-color", 
 	G_CALLBACK (plugin_x11_notify_cb), window);
   } else {
     gdk_window_move_resize (player->target, 0, 0, width, height);
@@ -168,7 +169,7 @@ plugin_x11_teardown (SwfmozPlayer *player)
 {
   if (player->target) {
     gdk_window_remove_filter (player->target, plugin_x11_handle_event, player);
-    g_signal_handlers_disconnect_by_func (player->player, 
+    g_signal_handlers_disconnect_by_func (player, 
 	plugin_x11_notify_cb, player->target);
   }
   swfmoz_player_set_target (player, NULL, 0, 0, 0, 0);

@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "swfmoz_dialog.h"
 #include "plugin.h"
 #include "swfmoz_loader.h"
@@ -90,6 +92,25 @@ error:
   return;
 }
 
+static char *
+swfmoz_dialog_get_loader_filename (SwfdecLoader *loader)
+{
+  const SwfdecURL *url = swfdec_loader_get_url (loader);
+  const char *path;
+
+  path = swfdec_url_get_path (url);
+  if (path == NULL) {
+    return "unknown";
+  } else {
+    const char *slash = strrchr (path, '/');
+    if (slash) {
+      return g_strdup (slash + 1);
+    } else {
+      return g_strdup (path);
+    }
+  }
+}
+
 static void
 swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
 {
@@ -121,7 +142,7 @@ swfmoz_dialog_save_media (GtkButton *button, SwfmozDialog *dialog)
     return;
   }
   
-  filename = swfdec_loader_get_filename (SWFDEC_LOADER (loader));
+  filename = swfmoz_dialog_get_loader_filename (SWFDEC_LOADER (loader));
   s = g_strdup_printf ("Save \"%s\"", filename);
   chooser = gtk_file_chooser_dialog_new (s, GTK_WINDOW (dialog),
       GTK_FILE_CHOOSER_ACTION_SAVE, 
@@ -153,10 +174,12 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   dialog->media = widget = gtk_tree_view_new_with_model (dialog->player->loaders);
 
   renderer = gtk_cell_renderer_text_new ();
-  column = gtk_tree_view_column_new_with_attributes ("Name", renderer,
-    "text", SWFMOZ_LOADER_COLUMN_NAME, NULL);
+  g_object_set (renderer, "width-chars", 25, "editable", TRUE,
+      "ellipsize", PANGO_ELLIPSIZE_START, "ellipsize-set", TRUE, NULL);
+  column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
+    "text", SWFMOZ_LOADER_COLUMN_URL, "expand", TRUE, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_NAME);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_URL);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   renderer = gtk_cell_renderer_text_new ();
@@ -178,14 +201,6 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
     "active", SWFMOZ_LOADER_COLUMN_ERROR, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_ERROR);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
-
-  renderer = gtk_cell_renderer_text_new ();
-  g_object_set (renderer, "width-chars", 15, "editable", TRUE, NULL);
-  column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
-    "text", SWFMOZ_LOADER_COLUMN_URL, NULL);
-  gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_URL);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   align = gtk_scrolled_window_new (NULL, NULL);

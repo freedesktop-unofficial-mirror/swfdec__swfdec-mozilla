@@ -22,6 +22,7 @@
 #endif
 
 #include "swfmoz_loader.h"
+#include "swfmoz_player.h"
 #include "plugin.h"
 
 /* Note about refcounting:
@@ -47,25 +48,32 @@ swfmoz_loader_dispose (GObject *object)
 }
 
 static void
-swfmoz_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, 
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
+swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player, 
+    const char *url, SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
+  SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
-  const char *url;
 
-  moz->instance = SWFMOZ_LOADER (parent)->instance;
+  g_printerr ("loading %s\n", url);
+  moz->instance = mozplay->instance;
   g_object_ref (moz);
-  url = swfdec_url_get_url (swfdec_loader_get_url (loader));
-  if (request == SWFDEC_LOADER_REQUEST_POST) {
-    if (buffer) {
-      plugin_post_url_notify (moz->instance, url, NULL, 
-	  (char *) buffer->data, buffer->length, moz);
-    } else {
-      plugin_post_url_notify (moz->instance, url, NULL, NULL, 0, moz);
-    }
+  if (mozplay->initial) {
+    moz->stream = mozplay->initial;
+    moz->stream->pdata = moz;
+    mozplay->initial = NULL;
   } else {
-    plugin_get_url_notify (moz->instance, url, NULL, moz);
+    if (request == SWFDEC_LOADER_REQUEST_POST) {
+      if (buffer) {
+	plugin_post_url_notify (moz->instance, url, NULL, 
+	    (char *) buffer->data, buffer->length, moz);
+      } else {
+	plugin_post_url_notify (moz->instance, url, NULL, NULL, 0, moz);
+      }
+    } else {
+      plugin_get_url_notify (moz->instance, url, NULL, moz);
+    }
   }
+  swfmoz_player_add_loader (mozplay, moz);
 }
 
 static void
@@ -105,7 +113,6 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPP instance, NPStream *stream)
   g_return_if_fail (stream != NULL);
 
   g_printerr ("Loading stream: %s\n", stream->url);
-  loader->instance = instance;
   loader->stream = stream;
   if (stream->end)
     swfdec_loader_set_size (SWFDEC_LOADER (loader), stream->end);
@@ -121,22 +128,6 @@ swfmoz_loader_ensure_open (SwfmozLoader *loader)
   swfdec_loader_set_url (SWFDEC_LOADER (loader), loader->stream->url);
   swfdec_stream_open (SWFDEC_STREAM (loader));
   loader->open = TRUE;
-}
-
-SwfdecLoader *
-swfmoz_loader_new (NPP instance, NPStream *stream)
-{
-  SwfmozLoader *ret;
-  SwfdecURL *url;
-
-  g_return_val_if_fail (stream != NULL, NULL);
-
-  url = swfdec_url_new (stream->url);
-  ret = g_object_new (SWFMOZ_TYPE_LOADER, "url", url, NULL);
-  swfdec_url_free (url);
-  swfmoz_loader_set_stream (ret, instance, stream);
-
-  return SWFDEC_LOADER (ret);
 }
 
 const char *

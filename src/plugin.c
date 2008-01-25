@@ -161,6 +161,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     uint16_t mode, int16_t argc, char *argn[], char *argv[],
     NPSavedData * saved)
 {
+  SwfdecPlayer *player;
   int i;
 
   if (instance == NULL)
@@ -188,7 +189,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   /* Init functioncalling (even g_type_init) gets postponed until we know we
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
-  instance->pdata = swfmoz_player_new (instance, FALSE);
+  instance->pdata = player = swfmoz_player_new (instance, FALSE);
 
   /* set the properties we support */
   /* FIXME: figure out how variables override each other */
@@ -197,11 +198,11 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       continue;
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
-	swfmoz_player_add_variables (instance->pdata, argv[i]);
+	swfdec_player_set_variables (player, argv[i]);
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
       GdkColor color;
       if (gdk_color_parse (argv[i], &color)) {
-	swfdec_player_set_background_color (SWFMOZ_PLAYER (instance->pdata)->player, 
+	swfdec_player_set_background_color (player, 
 	    0xFF000000 | (color.red / 0x101 << 16) | 
 	    (color.green / 0x101 << 8) | (color.blue / 0x101));
       }
@@ -220,7 +221,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       } else {
 	scale = SWFDEC_SCALE_SHOW_ALL;
       }
-      swfdec_player_set_scale_mode (SWFMOZ_PLAYER (instance->pdata)->player, scale);
+      swfdec_player_set_scale_mode (player, scale);
     } else if (g_ascii_strcasecmp (argn[i], "salign") == 0) {
       struct {
 	const char *	name;
@@ -244,7 +245,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	  break;
 	}
       }
-      swfdec_player_set_alignment (SWFMOZ_PLAYER (instance->pdata)->player, align);
+      swfdec_player_set_alignment (player, align);
     } else {
       g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
 	  argn[i], argv[i] ? argv[i] : "(null)");
@@ -270,16 +271,11 @@ static NPError
 plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream, 
     NPBool seekable, uint16* stype)
 {
-  SwfdecLoader *loader;
-
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  loader = swfmoz_player_add_stream (instance->pdata, stream);
-  if (loader == NULL)
+  if (!swfmoz_player_set_initial_stream (instance->pdata, stream))
     return NPERR_INVALID_URL;
-  g_object_ref (loader);
-  stream->pdata = loader;
   if (stype)
     *stype = NP_ASFILE;
   return NPERR_NO_ERROR;

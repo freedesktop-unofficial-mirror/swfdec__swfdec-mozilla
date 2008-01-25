@@ -20,14 +20,14 @@
 #ifndef _SWFMOZ_PLAYER_H_
 #define _SWFMOZ_PLAYER_H_
 
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 #include <npapi.h>
+#include "swfmoz_loader.h"
 
 G_BEGIN_DECLS
 
 enum {
   SWFMOZ_LOADER_COLUMN_LOADER,
-  SWFMOZ_LOADER_COLUMN_NAME,
   SWFMOZ_LOADER_COLUMN_URL,
   SWFMOZ_LOADER_COLUMN_TYPE,
   SWFMOZ_LOADER_COLUMN_EOF,
@@ -47,15 +47,13 @@ typedef struct _SwfmozPlayerClass SwfmozPlayerClass;
 #define SWFMOZ_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFMOZ_TYPE_PLAYER, SwfmozPlayerClass))
 
 struct _SwfmozPlayer {
-  GObject		object;
+  SwfdecGtkPlayer	player;
 
   NPP			instance;		/* the mozilla plugin */
 
   GMainContext *	context;		/* the main context run by the thread */
 
-  SwfdecPlayer *	player;			/* the player instance */
-  SwfdecLoader *	initial;		/* loader that spawned this player or NULL if none yet */
-  char *		variables;		/* variables to pass to initial loader */
+  NPStream *		initial;		/* loader that spawned this player or NULL if none yet */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
   GdkWindow *		target;			/* what we draw to */
   GdkRectangle		target_rect;		/* area in target that this plugin occupies */
@@ -70,17 +68,19 @@ struct _SwfmozPlayer {
 };
 
 struct _SwfmozPlayerClass {
-  GObjectClass		object_class;
+  SwfdecGtkPlayerClass	player_class;
 };
 
 GType		swfmoz_player_get_type   	(void);
 
-SwfmozPlayer *	swfmoz_player_new	  	(NPP			instance,
+SwfdecPlayer *	swfmoz_player_new	  	(NPP			instance,
 						 gboolean		windowless);
 void		swfmoz_player_remove		(SwfmozPlayer *		player);
 
-SwfdecLoader *	swfmoz_player_add_stream	(SwfmozPlayer *		player,
+gboolean	swfmoz_player_set_initial_stream (SwfmozPlayer *	player,
 						 NPStream *		stream);
+void		swfmoz_player_add_loader	(SwfmozPlayer *		player,
+						 SwfmozLoader *		loader);
 void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 GdkWindow *		target,
 						 int			x,

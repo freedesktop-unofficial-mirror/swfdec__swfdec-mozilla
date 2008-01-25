@@ -21,7 +21,7 @@
 #define _SWFMOZ_LOADER_H_
 
 #include <npapi.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 
@@ -41,7 +41,7 @@ struct _SwfmozLoader
   SwfdecLoader		parent;
 
   NPP			instance;	/* instance we belong to */
-  NPStream *		stream;		/* stream we do */
+  NPStream *		stream;		/* stream we do or NULL if not created yet */
 
   char *		cache_file;	/* where the file is cached */
   gboolean		open;		/* TRUE when data has arrived */
@@ -54,8 +54,6 @@ struct _SwfmozLoaderClass
 
 GType		swfmoz_loader_get_type   	(void);
 
-SwfdecLoader *	swfmoz_loader_new	  	(NPP		instance,
-						 NPStream *	stream);
 void		swfmoz_loader_set_stream	(SwfmozLoader *	loader,
 						 NPP		instance,
 						 NPStream *	stream);
