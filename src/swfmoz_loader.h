@@ -55,7 +55,6 @@ struct _SwfmozLoaderClass
 GType		swfmoz_loader_get_type   	(void);
 
 void		swfmoz_loader_set_stream	(SwfmozLoader *	loader,
-						 NPP		instance,
 						 NPStream *	stream);
 void		swfmoz_loader_ensure_open	(SwfmozLoader *	loader);
 					 

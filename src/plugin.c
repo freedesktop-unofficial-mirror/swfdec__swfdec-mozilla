@@ -274,8 +274,12 @@ plugin_new_stream (NPP instance, NPMIMEType type, NPStream* stream,
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if (!swfmoz_player_set_initial_stream (instance->pdata, stream))
-    return NPERR_INVALID_URL;
+  if (!SWFMOZ_IS_LOADER (stream->notifyData)) {
+    if (!swfmoz_player_set_initial_stream (instance->pdata, stream))
+      return NPERR_INVALID_URL;
+  } else {
+    swfmoz_loader_set_stream (stream->notifyData, stream);
+  }
   if (stype)
     *stype = NP_ASFILE;
   return NPERR_NO_ERROR;
@@ -372,10 +376,11 @@ plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyD
 
   if (reason == NPRES_NETWORK_ERR) {
     swfdec_stream_error (stream, "Network error");
+    g_object_unref (stream);
   } else if (reason == NPRES_USER_BREAK) {
     swfdec_stream_error (stream, "User interrupt");
+    g_object_unref (stream);
   }
-  g_object_unref (stream);
 }
 
 NPError

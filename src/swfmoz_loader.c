@@ -54,12 +54,10 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
 
-  g_printerr ("loading %s\n", url);
   moz->instance = mozplay->instance;
   g_object_ref (moz);
   if (mozplay->initial) {
-    moz->stream = mozplay->initial;
-    moz->stream->pdata = moz;
+    swfmoz_loader_set_stream (moz, mozplay->initial);
     mozplay->initial = NULL;
   } else {
     if (request == SWFDEC_LOADER_REQUEST_POST) {
@@ -104,14 +102,14 @@ swfmoz_loader_init (SwfmozLoader *slow_loader)
 }
 
 void
-swfmoz_loader_set_stream (SwfmozLoader *loader, NPP instance, NPStream *stream)
+swfmoz_loader_set_stream (SwfmozLoader *loader, NPStream *stream)
 {
   g_return_if_fail (SWFMOZ_IS_LOADER (loader));
   g_return_if_fail (loader->stream == NULL);
-  g_return_if_fail (instance != NULL);
   g_return_if_fail (stream != NULL);
 
   g_printerr ("Loading stream: %s\n", stream->url);
+  stream->pdata = loader;
   loader->stream = stream;
   if (stream->end)
     swfdec_loader_set_size (SWFDEC_LOADER (loader), stream->end);
