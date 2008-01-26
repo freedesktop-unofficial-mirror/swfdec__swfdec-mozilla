@@ -177,8 +177,9 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   g_object_set (renderer, "width-chars", 25, "editable", TRUE,
       "ellipsize", PANGO_ELLIPSIZE_START, "ellipsize-set", TRUE, NULL);
   column = gtk_tree_view_column_new_with_attributes ("URL", renderer,
-    "text", SWFMOZ_LOADER_COLUMN_URL, "expand", TRUE, NULL);
+    "text", SWFMOZ_LOADER_COLUMN_URL, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_column_set_expand (column, TRUE);
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_URL);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
