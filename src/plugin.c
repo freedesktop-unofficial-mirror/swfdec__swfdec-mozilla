@@ -376,11 +376,10 @@ plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyD
 
   if (reason == NPRES_NETWORK_ERR) {
     swfdec_stream_error (stream, "Network error");
-    g_object_unref (stream);
   } else if (reason == NPRES_USER_BREAK) {
     swfdec_stream_error (stream, "User interrupt");
-    g_object_unref (stream);
   }
+  g_object_unref (stream);
 }
 
 NPError

@@ -55,11 +55,11 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
 
   moz->instance = mozplay->instance;
-  g_object_ref (moz);
   if (mozplay->initial) {
     swfmoz_loader_set_stream (moz, mozplay->initial);
     mozplay->initial = NULL;
   } else {
+    g_object_ref (moz);
     if (request == SWFDEC_LOADER_REQUEST_POST) {
       if (buffer) {
 	plugin_post_url_notify (moz->instance, url, NULL, 
@@ -109,6 +109,7 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPStream *stream)
   g_return_if_fail (stream != NULL);
 
   g_printerr ("Loading stream: %s\n", stream->url);
+  g_object_ref (loader);
   stream->pdata = loader;
   loader->stream = stream;
   if (stream->end)
