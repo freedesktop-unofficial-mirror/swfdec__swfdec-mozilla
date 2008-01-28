@@ -1,4 +1,10 @@
 
+ 0.5.90 ("Sticks and stones may break my bones")
+
+We're getting close to 0.6:
+- update API to new version
+- resolve relative links correctly
+
  0.5.5 ("Reading is lame")
 
 New release:
