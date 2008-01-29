@@ -243,7 +243,12 @@ swfmoz_player_update_cursor (SwfmozPlayer *player)
   if (window == NULL)
     return;
   display = gdk_drawable_get_display (window);
-  g_object_get (player, "mouse-cursor", &swfcursor, NULL);
+
+  if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player))) {
+    swfcursor = SWFDEC_MOUSE_CURSOR_CLICK;
+  } else {
+    g_object_get (player, "mouse-cursor", &swfcursor, NULL);
+  }
 
   switch (swfcursor) {
     case SWFDEC_MOUSE_CURSOR_NONE:
@@ -287,6 +292,7 @@ static void
 swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
 {
   if (g_str_equal (pspec->name, "playing")) {
+    swfmoz_player_update_cursor (player);
     swfmoz_player_invalidate (player);
   } else if (g_str_equal (pspec->name, "mouse-cursor")) {
     swfmoz_player_update_cursor (player);
