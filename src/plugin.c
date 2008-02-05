@@ -321,9 +321,7 @@ plugin_write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buf
   if (!SWFMOZ_IS_LOADER (stream->pdata))
     return -1;
 
-  new = swfdec_buffer_new ();
-  new->length = len;
-  new->data = g_memdup (buffer, len);
+  new = swfdec_buffer_new_for_data (g_memdup (buffer, len), len);
   swfmoz_loader_ensure_open (stream->pdata);
   swfdec_stream_push (stream->pdata, new);
   return len;
