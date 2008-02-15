@@ -482,7 +482,7 @@ swfmoz_player_set_initial_stream (SwfmozPlayer *player, NPStream *stream)
   player->initial = stream;
   url = swfdec_url_new (stream->url);
   if (url == NULL) {
-    g_printerr ("%s is either a broken URL or Swfdec can't parse it.",
+    g_printerr ("%s is either a broken URL or Swfdec can't parse it\n",
 	stream->url);
     return FALSE;
   }
