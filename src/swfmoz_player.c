@@ -656,11 +656,14 @@ swfmoz_player_mouse_press (SwfmozPlayer *player, int x, int y, guint button)
 
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
 
+  if (player->menu && GTK_WIDGET_VISIBLE (player->menu)) {
+    gtk_menu_popdown (GTK_MENU (player->menu));
+    player->no_release = button;
+    return TRUE;
+  }
+
   if (button > 32)
     return FALSE;
-
-  if (player->menu && GTK_WIDGET_VISIBLE (player->menu))
-    gtk_menu_popdown (GTK_MENU (player->menu));
 
   if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player))) {
     plugin_push_allow_popups (player->instance, TRUE);
@@ -676,6 +679,11 @@ swfmoz_player_mouse_release (SwfmozPlayer *player, int x, int y, guint button)
   gboolean ret;
 
   g_return_val_if_fail (SWFMOZ_IS_PLAYER (player), FALSE);
+
+  if (button == player->no_release) {
+    player->no_release = 0;
+    return TRUE;
+  }
 
   if (button > 32)
     return FALSE;

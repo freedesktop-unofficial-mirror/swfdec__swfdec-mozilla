@@ -63,6 +63,7 @@ struct _SwfmozPlayer {
   GdkRegion *		repaint;		/* area to repaint or NULL if none */
 
   /* Gtk stuff */
+  guint			no_release;		/* for disabling release event when closing right-click menu */
   GtkMenu *		menu;			/* right-click menu */
   GtkTreeModel *	loaders;		/* loaders used in this players */
 };
