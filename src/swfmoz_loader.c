@@ -54,6 +54,7 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
 
+  moz->waiting_for_stream = TRUE;
   moz->instance = mozplay->instance;
   if (mozplay->initial) {
     swfmoz_loader_set_stream (moz, mozplay->initial);
@@ -77,6 +78,8 @@ static void
 swfmoz_loader_close (SwfdecStream *stream)
 {
   SwfmozLoader *moz = SWFMOZ_LOADER (stream);
+
+  moz->waiting_for_stream = FALSE;
 
   if (moz->stream)
     plugin_destroy_stream (moz->instance, moz->stream);
@@ -107,6 +110,13 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPStream *stream)
   g_return_if_fail (SWFMOZ_IS_LOADER (loader));
   g_return_if_fail (loader->stream == NULL);
   g_return_if_fail (stream != NULL);
+
+  if (!loader->waiting_for_stream) {
+    plugin_destroy_stream (loader->instance, stream);
+    return;
+  }
+
+  loader->waiting_for_stream = FALSE;
 
   g_printerr ("Loading stream: %s\n", stream->url);
   g_object_ref (loader);

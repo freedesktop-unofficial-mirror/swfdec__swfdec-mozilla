@@ -43,6 +43,7 @@ struct _SwfmozLoader
   NPP			instance;	/* instance we belong to */
   NPStream *		stream;		/* stream we do or NULL if not created yet */
 
+  gboolean		waiting_for_stream;
   char *		cache_file;	/* where the file is cached */
   gboolean		open;		/* TRUE when data has arrived */
 };
