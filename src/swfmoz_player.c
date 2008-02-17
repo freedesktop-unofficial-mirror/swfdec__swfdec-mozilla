@@ -525,7 +525,12 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   swfdec_player_set_size (SWFDEC_PLAYER (player), width - x, height - y);
   if (target) {
     g_object_ref (target);
+    swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
+	gdk_window_get_toplevel (target));
     swfmoz_player_update_cursor (player);
+  } else {
+    swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
+	NULL);
   }
 }
 
