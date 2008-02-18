@@ -392,9 +392,13 @@ SwfdecPlayer *
 swfmoz_player_new (NPP instance, gboolean windowless)
 {
   SwfmozPlayer *ret;
+  SwfdecSystem *system;
 
+  system = swfdec_gtk_system_new (NULL);
+  g_object_set (system, "player-type", "PlugIn", NULL);
   ret = g_object_new (SWFMOZ_TYPE_PLAYER,
       "loader-type", SWFMOZ_TYPE_LOADER, "socket-type", SWFDEC_TYPE_SOCKET, //SWFDEC_TYPE_GTK_SOCKET,
+      "system", system,
       NULL);
   ret->instance = instance;
   ret->windowless = windowless;
