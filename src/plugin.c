@@ -237,11 +237,11 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	{ "br", SWFDEC_ALIGNMENT_BOTTOM_RIGHT }
       };
       SwfdecAlignment align = SWFDEC_ALIGNMENT_CENTER;
-      guint i;
+      guint j;
 
-      for (i = 0; i < G_N_ELEMENTS (possibilities); i++) {
-	if (g_ascii_strcasecmp (argv[i], possibilities[i].name) == 0) {
-	  align = possibilities[i].align;
+      for (j = 0; j < G_N_ELEMENTS (possibilities); j++) {
+	if (g_ascii_strcasecmp (argv[i], possibilities[j].name) == 0) {
+	  align = possibilities[j].align;
 	  break;
 	}
       }
