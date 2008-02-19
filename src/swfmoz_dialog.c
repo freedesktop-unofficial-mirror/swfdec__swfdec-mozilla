@@ -100,7 +100,7 @@ swfmoz_dialog_get_loader_filename (SwfdecLoader *loader)
 
   path = swfdec_url_get_path (url);
   if (path == NULL) {
-    return "unknown";
+    return g_strdup ("unknown");
   } else {
     const char *slash = strrchr (path, '/');
     if (slash) {

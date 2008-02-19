@@ -156,6 +156,10 @@ swfmoz_loader_get_data_type_string (SwfdecLoader *loader)
       return "Text";
     case SWFDEC_LOADER_DATA_XML:
       return "XML Data";
+    case SWFDEC_LOADER_DATA_JPEG:
+      return "JPEG image";
+    case SWFDEC_LOADER_DATA_PNG:
+      return "PNG image";
     default:
       g_printerr ("unknown data type %u\n", 
 	  (guint) swfdec_loader_get_data_type (loader));

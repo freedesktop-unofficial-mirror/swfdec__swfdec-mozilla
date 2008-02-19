@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "plugin_x11.h"
 #include "swfmoz_player.h"
 #include <gdk/gdkkeysyms.h>
 

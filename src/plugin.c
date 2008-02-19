@@ -31,6 +31,7 @@
 
 #include "swfmoz_loader.h"
 #include "swfmoz_player.h"
+#include "plugin.h"
 #include "plugin_x11.h"
 
 NPNetscapeFuncs mozilla_funcs;
@@ -97,7 +98,7 @@ plugin_pop_allow_popups (NPP instance)
 char *
 NP_GetMIMEDescription (void)
 {
-  return "application/x-shockwave-flash:swf:Adobe Flash movie;application/futuresplash:spl:FutureSplash movie";
+  return (char *) "application/x-shockwave-flash:swf:Adobe Flash movie;application/futuresplash:spl:FutureSplash movie";
 }
 
 NPError 
@@ -112,15 +113,26 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
 		      
   switch (var) {
     case NPPVpluginNameString:
-      *val = "Shockwave Flash";
+      *val = (char *) "Shockwave Flash";
       break;
     case NPPVpluginDescriptionString:
       /* FIXME: find a way to encode the Swfdec version without breaking stupid JS scripts */
-      *val = "Shockwave Flash 9.0 r100";
+      *val = (char *) "Shockwave Flash 9.0 r100";
       break;
     case NPPVpluginNeedsXEmbed:
       *((PRBool*) val) = PR_TRUE;
       break;
+    case NPPVpluginWindowBool:
+    case NPPVpluginTransparentBool:
+    case NPPVjavaClass:
+    case NPPVpluginWindowSize:
+    case NPPVpluginTimerInterval:
+    case NPPVpluginScriptableInstance:
+    case NPPVpluginScriptableIID:
+    case NPPVjavascriptPushCallerBool:
+    case NPPVpluginKeepLibraryInMemory:
+    case NPPVpluginScriptableNPObject:
+    case NPPVformValue:
     default:
       return NPERR_INVALID_PARAM;
       break;
@@ -128,6 +140,7 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
   return NPERR_NO_ERROR;
 }
 
+G_MODULE_EXPORT gboolean swfdec_mozilla_make_sure_this_thing_stays_in_memory (void);
 /* This mess is unfortunately necessary */
 #define PLUGIN_FILE PLUGIN_DIR G_DIR_SEPARATOR_S "libswfdecmozilla." G_MODULE_SUFFIX
 G_MODULE_EXPORT gboolean
@@ -240,7 +253,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       guint j;
 
       for (j = 0; j < G_N_ELEMENTS (possibilities); j++) {
-	if (g_ascii_strcasecmp (argv[i], possibilities[j].name) == 0) {
+	if (g_ascii_strcasecmp (argv[j], possibilities[j].name) == 0) {
 	  align = possibilities[j].align;
 	  break;
 	}
@@ -255,7 +268,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   return NPERR_NO_ERROR;
 }
 
-NPError 
+static NPError 
 plugin_destroy (NPP instance, NPSavedData **save)
 {
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
