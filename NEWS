@@ -1,4 +1,11 @@
 
+ 0.6.0 ("It'll choke on the sweet air of freedom.")
+
+And here's the first long-term release of Swfdec-mozilla.
+- support missing plugins installation
+- update API
+- bugfixes galore
+
  0.5.90 ("Sticks and stones may break my bones")
 
 We're getting close to 0.6:
