@@ -22,6 +22,6 @@ Notes:
 
 Dependencies:
 
-  swfdec (= 0.5.4)
-  swfdec-gtk (= 0.5.4)
+  swfdec (> 0.6.0)
+  swfdec-gtk (> 0.6.0)
 
