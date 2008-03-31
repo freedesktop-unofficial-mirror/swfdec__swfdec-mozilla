@@ -38,7 +38,7 @@ dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 #ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 
 AC_PROG_CC
-7M_PROG_CC_STDC
+AM_PROG_CC_STDC
 
 AC_HEADER_STDC([])
 
