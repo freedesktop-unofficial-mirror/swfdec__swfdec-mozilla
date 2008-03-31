@@ -4,7 +4,6 @@ AC_INIT(swfdec-mozilla,0.6.1)
 [is_dev=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/1/')]
 if test x"$is_dev" = x1 ; then
   SWFDEC_CVS="yes"
-  SWFDEC_CVS="yes"
 else
   SWFDEC_CVS="no"
 fi
