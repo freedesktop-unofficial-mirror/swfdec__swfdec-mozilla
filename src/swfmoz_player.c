@@ -200,7 +200,7 @@ swfmoz_player_redraw (SwfmozPlayer *player, const SwfdecRectangle *extents,
     } else {
       GSource *source = g_idle_source_new ();
       player->repaint_source = source;
-      g_source_set_priority (source, GDK_PRIORITY_REDRAW);
+      g_source_set_priority (source, GDK_PRIORITY_REDRAW - 10);
       g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
       g_source_attach (source, player->context);
       player->repaint = region;
@@ -618,15 +618,9 @@ swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
   if (player->repaint) {
 
     g_assert (player->repaint_source);
-    gdk_region_subtract (player->repaint, region);
+    gdk_region_union (player->repaint, region);
 
-    if (gdk_region_empty (player->repaint)) {
-      g_source_destroy (player->repaint_source);
-      g_source_unref (player->repaint_source);
-      player->repaint_source = NULL;
-      gdk_region_destroy (player->repaint);
-      player->repaint = NULL;
-    }
+    region = player->repaint;
   }
 
   /* second, check if we have anything to draw */
@@ -656,6 +650,14 @@ swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
   }
   cairo_destroy (cr);
   gdk_window_end_paint (player->target);
+
+  if (region == player->repaint) {
+    g_source_destroy (player->repaint_source);
+    g_source_unref (player->repaint_source);
+    player->repaint_source = NULL;
+    gdk_region_destroy (player->repaint);
+    player->repaint = NULL;
+  }
 }
 
 gboolean
