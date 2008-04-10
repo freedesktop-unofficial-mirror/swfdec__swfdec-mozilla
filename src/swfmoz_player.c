@@ -200,7 +200,7 @@ swfmoz_player_redraw (SwfmozPlayer *player, const SwfdecRectangle *extents,
     } else {
       GSource *source = g_idle_source_new ();
       player->repaint_source = source;
-      g_source_set_priority (source, GDK_PRIORITY_REDRAW - 10);
+      g_source_set_priority (source, SWFDEC_GTK_PRIORITY_REDRAW);
       g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
       g_source_attach (source, player->context);
       player->repaint = region;
