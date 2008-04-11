@@ -114,20 +114,6 @@ plugin_x11_handle_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
   return GDK_FILTER_REMOVE;
 }
 
-static void
-plugin_x11_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, GdkWindow *window)
-{
-  GdkColor color;
-  guint c;
-
-  c = swfdec_player_get_background_color (player);
-  color.red = ((c & 0xFF0000) >> 16) * 0x101;
-  color.green = ((c & 0xFF00) >> 8) * 0x101;
-  color.blue = (c & 0xFF) * 0x101;
-  gdk_rgb_find_color (gdk_window_get_colormap (window), &color);
-  gdk_window_set_background (window, &color);
-}
-
 void
 plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow, 
     int x, int y, int width, int height)
@@ -135,7 +121,8 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
   if (player->target == NULL) {
     GdkWindowAttr attr;
     GdkWindow *parent, *window;
-    
+    GdkColor color;
+
     parent = gdk_window_foreign_new (xwindow);
     if (parent == NULL) {
       g_printerr ("invalid window given for setup (id %lu)\n", xwindow);
@@ -154,12 +141,12 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
     attr.window_type = GDK_WINDOW_CHILD;
     attr.wclass = GDK_INPUT_OUTPUT;
     window = gdk_window_new (parent, &attr, GDK_WA_X | GDK_WA_Y);
+    color.red = color.green = color.blue = 65535;
+    gdk_rgb_find_color (gdk_window_get_colormap (window), &color);
+    gdk_window_set_background (window, &color);
     gdk_window_add_filter (window, plugin_x11_handle_event, player);
     gdk_window_show (window);
     swfmoz_player_set_target (player, window, 0, 0, width, height);
-    plugin_x11_notify_cb (SWFDEC_PLAYER (player), NULL, window);
-    g_signal_connect (player, "notify::background-color", 
-	G_CALLBACK (plugin_x11_notify_cb), window);
   } else {
     gdk_window_move_resize (player->target, 0, 0, width, height);
   }
@@ -170,8 +157,6 @@ plugin_x11_teardown (SwfmozPlayer *player)
 {
   if (player->target) {
     gdk_window_remove_filter (player->target, plugin_x11_handle_event, player);
-    g_signal_handlers_disconnect_by_func (player, 
-	plugin_x11_notify_cb, player->target);
   }
   swfmoz_player_set_target (player, NULL, 0, 0, 0, 0);
 }
