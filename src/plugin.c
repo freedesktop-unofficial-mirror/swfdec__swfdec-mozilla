@@ -1,7 +1,7 @@
 /* Swfdec Mozilla Plugin
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -213,12 +213,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       if (argv[i])
 	swfdec_player_set_variables (player, argv[i]);
     } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
-      GdkColor color;
-      if (gdk_color_parse (argv[i], &color)) {
-	swfdec_player_set_background_color (player, 
-	    0xFF000000 | (color.red / 0x101 << 16) | 
-	    (color.green / 0x101 << 8) | (color.blue / 0x101));
-      }
     } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
