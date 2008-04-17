@@ -22,6 +22,7 @@
 
 #include <swfdec-gtk/swfdec-gtk.h>
 #include <npapi.h>
+#include "swfmoz_config.h"
 #include "swfmoz_loader.h"
 
 G_BEGIN_DECLS
@@ -66,6 +67,7 @@ struct _SwfmozPlayer {
   guint			no_release;		/* for disabling release event when closing right-click menu */
   GtkMenu *		menu;			/* right-click menu */
   GtkTreeModel *	loaders;		/* loaders used in this players */
+  SwfmozConfig *	config;			/* autoplay configuration */
 };
 
 struct _SwfmozPlayerClass {

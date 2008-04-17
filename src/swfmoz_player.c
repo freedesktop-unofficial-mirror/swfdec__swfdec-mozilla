@@ -31,10 +31,14 @@
 /*** menu ***/
 
 static void
-swfmoz_player_menu_playing_toggled (GtkCheckMenuItem *item, SwfdecGtkPlayer* player)
+swfmoz_player_menu_playing_toggled (GtkCheckMenuItem *item, SwfmozPlayer* player)
 {
-  if (swfdec_gtk_player_get_playing (player) != gtk_check_menu_item_get_active (item))
-    swfdec_gtk_player_set_playing (player, gtk_check_menu_item_get_active (item));
+  gboolean menu_item_active = gtk_check_menu_item_get_active (item);
+
+  if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player)) != menu_item_active) {
+      swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), menu_item_active);
+      swfmoz_config_set_autoplay (player->config, swfdec_player_get_url (SWFDEC_PLAYER (player)), menu_item_active);
+  }
 }
 
 static void
@@ -362,6 +366,9 @@ swfmoz_player_dispose (GObject *object)
     player->loaders = NULL;
   }
 
+  g_object_unref (player->config);
+  player->config = NULL;
+
   G_OBJECT_CLASS (swfmoz_player_parent_class)->dispose (object);
 }
 
@@ -402,6 +409,7 @@ swfmoz_player_new (NPP instance, gboolean windowless)
       NULL);
   ret->instance = instance;
   ret->windowless = windowless;
+  ret->config = swfmoz_config_new ();
 
   return SWFDEC_PLAYER (ret);
 }
@@ -491,7 +499,11 @@ swfmoz_player_set_initial_stream (SwfmozPlayer *player, NPStream *stream)
     return FALSE;
   }
   swfdec_player_set_url (SWFDEC_PLAYER (player), url);
+  if (swfmoz_config_should_autoplay (player->config, url)) {
+    swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
+  }
   swfdec_url_free (url);
+
   return TRUE;
 }
 
@@ -706,6 +718,7 @@ swfmoz_player_mouse_release (SwfmozPlayer *player, int x, int y, guint button)
   } else {
     if (button == 1) {
       swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
+      swfmoz_config_set_autoplay (player->config, swfdec_player_get_url (SWFDEC_PLAYER (player)), TRUE);
       ret = TRUE;
     } else {
       ret = FALSE;

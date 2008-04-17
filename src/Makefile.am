@@ -11,6 +11,7 @@ libswfdecmozilla_la_LDFLAGS = \
 libswfdecmozilla_la_SOURCES = \
 	plugin.c \
 	plugin_x11.c \
+	swfmoz_config.c \
 	swfmoz_dialog.c \
 	swfmoz_loader.c \
 	swfmoz_player.c
@@ -18,6 +19,7 @@ libswfdecmozilla_la_SOURCES = \
 noinst_HEADERS = \
 	plugin.h \
 	plugin_x11.h \
+	swfmoz_config.h \
 	swfmoz_dialog.h \
 	swfmoz_loader.h \
 	swfmoz_player.h
