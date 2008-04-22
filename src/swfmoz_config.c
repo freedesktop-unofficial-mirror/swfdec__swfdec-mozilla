@@ -43,7 +43,6 @@ swfmoz_config_save_file (SwfmozConfig *config)
   has_global = g_key_file_has_key (config->keyfile, "global", "autoplay",
 				   &error);
   if (error) {
-    g_printerr ("Unable to check for global config: %s\n", error->message);
     g_error_free (error);
     error = NULL;
   } else if (!has_global) {
@@ -87,8 +86,6 @@ swfmoz_config_read_file (void)
   keyfile = g_key_file_new ();
   if (!g_key_file_load_from_file (keyfile, keyfile_name, G_KEY_FILE_NONE,
 				  &error)) {
-      g_printerr ("Unable to load config file '%s': %s\n", keyfile_name,
-		  error->message);
       g_error_free (error);
       error = NULL;
   }
@@ -107,8 +104,6 @@ swfmoz_config_read_autoplay (SwfmozConfig *config, const char *host,
   tmp_autoplay = g_key_file_get_boolean (config->keyfile, host, "autoplay",
 					 &error);
   if (error) {
-    g_printerr ("Problem reading 'autoplay' for '%s': %s\n", host,
-		error->message);
     g_error_free (error);
   } else {
     autoplay = tmp_autoplay;
