@@ -253,12 +253,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     if (g_ascii_strcasecmp (argn[i], "flashvars") == 0) {
       if (argv[i])
 	swfdec_player_set_variables (player, argv[i]);
-    } else if (g_ascii_strcasecmp (argn[i], "bgcolor") == 0) {
-    } else if (g_ascii_strcasecmp (argn[i], "src") == 0) {
-    } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
-    } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
-    } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
-    } else if (g_ascii_strcasecmp (argn[i], "wmode") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "scale") == 0) {
       SwfdecScaleMode scale;
       if (g_ascii_strcasecmp (argv[i], "noborder") == 0) {
@@ -295,9 +289,6 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 	}
       }
       swfdec_player_set_alignment (player, align);
-    } else {
-      g_printerr ("Unsupported movie property %s with value \"%s\"\n", 
-	  argn[i], argv[i] ? argv[i] : "(null)");
     }
   }
 
