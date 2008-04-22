@@ -651,11 +651,10 @@ swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
       rect.y - player->target_rect.y, rect.width, rect.height);
   /* paint optional pause sign */
   if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player)) &&
-      player->initial != NULL) {
+      swfdec_player_get_url (SWFDEC_PLAYER (player)) != NULL) {
     int w = player->target_rect.width;
     int h = player->target_rect.height;
     int len = MIN (w, h) * 4 / 5;
-    g_print ("PAINTING PAUSE\n");
     cairo_rectangle (cr, 0, 0, w, h);
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.4);
     cairo_fill (cr);
