@@ -120,7 +120,7 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
       *val = (char *) "Shockwave Flash 9.0 r100";
       break;
     case NPPVpluginNeedsXEmbed:
-      *((PRBool*) val) = PR_TRUE;
+      *((PRBool*) val) = PR_FALSE;
       break;
     case NPPVpluginWindowBool:
     case NPPVpluginTransparentBool:
@@ -390,7 +390,6 @@ plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyD
 NPError
 NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 {
-  PRBool b = PR_FALSE;
   NPNToolkitType toolkit = 0;
 
   if (moz_funcs == NULL || plugin_funcs == NULL)
@@ -408,10 +407,6 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
   /* we must be GTK 2 */
   if (CallNPN_GetValueProc(mozilla_funcs.getvalue, NULL,
 	NPNVToolkit, (void *) &toolkit) || toolkit != NPNVGtk2)
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
-  /* we want XEmbed embedding */
-  if (CallNPN_GetValueProc(mozilla_funcs.getvalue, NULL,
-	NPNVSupportsXEmbedBool, (void *) &b) || !b)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
   memset (plugin_funcs, 0, sizeof (NPPluginFuncs));
