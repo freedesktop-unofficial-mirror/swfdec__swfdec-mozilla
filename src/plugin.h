@@ -26,6 +26,10 @@
 G_BEGIN_DECLS
 
 
+gboolean	plugin_get_value		(NPP		instance,
+						 NPNVariable	var,
+						 gpointer	data);
+
 void		plugin_get_url			(NPP		instance,
 						 const char *	url,
 						 const char *	target);

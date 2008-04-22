@@ -153,16 +153,31 @@ swfmoz_player_idle_redraw (gpointer playerp)
   GdkRegion *region;
 
   region = player->repaint;
-  if (region) {
-    player->repaint = NULL;
-    g_source_destroy (player->repaint_source);
-    g_source_unref (player->repaint_source);
-    player->repaint_source = NULL;
-    swfmoz_player_render (player, region);
-    gdk_region_destroy (region);
-  }
+  player->repaint = NULL;
+  g_source_unref (player->repaint_source);
+  player->repaint_source = NULL;
+  if (player->windowless) {
+    NPRect rect;
+    GdkRectangle *rectangles;
+    int i, n_rectangles;
 
-  return TRUE;
+    g_assert (player->repaint == NULL);
+    
+    gdk_region_get_rectangles (region, &rectangles, &n_rectangles);
+
+    for (i = 0; i < n_rectangles; i++) {
+      rect.left = rectangles[i].x;
+      rect.top = rectangles[i].y;
+      rect.right = rectangles[i].x + rectangles[i].width;
+      rect.bottom = rectangles[i].y + rectangles[i].height;
+      plugin_invalidate_rect (player->instance, &rect);
+    }
+  } else {
+    swfmoz_player_render (player, NULL, region);
+  }
+  gdk_region_destroy (region);
+
+  return FALSE;
 }
 
 static void
@@ -181,34 +196,15 @@ swfmoz_player_redraw (SwfmozPlayer *player, const SwfdecRectangle *extents,
     gdk_region_union_with_rect (region, (GdkRectangle *) &rects[i]);
   }
 
-  if (player->windowless) {
-    NPRect rect;
-    GdkRectangle *rectangles;
-    int n_rectangles;
-
-    g_assert (player->repaint == NULL);
-    
-    gdk_region_get_rectangles (region, &rectangles, &n_rectangles);
-
-    for (i = 0; i < (guint) n_rectangles; i++) {
-      rect.left = rectangles[i].x;
-      rect.top = rectangles[i].y;
-      rect.right = rectangles[i].x + rectangles[i].width;
-      rect.bottom = rectangles[i].y + rectangles[i].height;
-      plugin_invalidate_rect (player->instance, &rect);
-    }
-    gdk_region_destroy (region);
+  if (player->repaint_source) {
+    g_assert (player->repaint);
   } else {
-    if (player->repaint_source) {
-      g_assert (player->repaint);
-    } else {
-      GSource *source = g_idle_source_new ();
-      player->repaint_source = source;
-      g_source_set_priority (source, SWFDEC_GTK_PRIORITY_REDRAW);
-      g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
-      g_source_attach (source, player->context);
-      player->repaint = region;
-    }
+    GSource *source = g_idle_source_new ();
+    player->repaint_source = source;
+    g_source_set_priority (source, SWFDEC_GTK_PRIORITY_REDRAW);
+    g_source_set_callback (source, swfmoz_player_idle_redraw, player, NULL);
+    g_source_attach (source, player->context);
+    player->repaint = region;
   }
 }
 
@@ -244,7 +240,8 @@ swfmoz_player_update_cursor (SwfmozPlayer *player)
   SwfdecMouseCursor swfcursor;
   GdkCursor *cursor;
 
-  if (window == NULL)
+  /* FIXME: make this work for windowless mode */
+  if (window == NULL || player->windowless)
     return;
   display = gdk_drawable_get_display (window);
 
@@ -396,7 +393,7 @@ swfmoz_player_init (SwfmozPlayer *player)
 }
 
 SwfdecPlayer *
-swfmoz_player_new (NPP instance, gboolean windowless)
+swfmoz_player_new (NPP instance, gboolean windowless, gboolean opaque)
 {
   SwfmozPlayer *ret;
   SwfdecSystem *system;
@@ -409,6 +406,7 @@ swfmoz_player_new (NPP instance, gboolean windowless)
       NULL);
   ret->instance = instance;
   ret->windowless = windowless;
+  ret->opaque = opaque;
   ret->config = swfmoz_config_new ();
 
   return SWFDEC_PLAYER (ret);
@@ -539,7 +537,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   player->target_rect.y = y;
   player->target_rect.width = width;
   player->target_rect.height = height;
-  swfdec_player_set_size (SWFDEC_PLAYER (player), width - x, height - y);
+  swfdec_player_set_size (SWFDEC_PLAYER (player), width, height);
   if (target) {
     g_object_ref (target);
     swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
@@ -619,32 +617,44 @@ swfdec_gtk_player_draw_pause (cairo_t *cr)
 }
 
 void
-swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
+swfmoz_player_render (SwfmozPlayer *player, cairo_t *cr, GdkRegion *region)
 {
   GdkRectangle rect;
-  cairo_t *cr;
+  gboolean has_cr = cr != NULL;
 
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
   g_return_if_fail (!gdk_region_empty (region));
 
   /* first, remove the repainted stuff from the stuff that needs a redraw */
   if (player->repaint) {
-
     g_assert (player->repaint_source);
-    gdk_region_union (player->repaint, region);
-
-    region = player->repaint;
+    gdk_region_subtract (player->repaint, region);
+    if (gdk_region_empty (player->repaint)) {
+      g_source_destroy (player->repaint_source);
+      g_source_unref (player->repaint_source);
+      player->repaint_source = NULL;
+      gdk_region_destroy (player->repaint);
+      player->repaint = NULL;
+    }
   }
 
   /* second, check if we have anything to draw */
   if (player->target == NULL)
     return;
 
-  /* paint it */
-  gdk_window_begin_paint_region (player->target, region);
-  cr = gdk_cairo_create (player->target);
+  if (!has_cr) {
+    gdk_window_begin_paint_region (player->target, region);
+    cr = gdk_cairo_create (player->target);
+  } else {
+    cairo_save (cr);
+  }
   gdk_cairo_region (cr, region);
   cairo_clip (cr);
+  /* paint it */
+  if (player->opaque) {
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+  }
   cairo_translate (cr, player->target_rect.x, player->target_rect.y);
   gdk_region_get_clipbox (region, &rect);
   swfdec_player_render (SWFDEC_PLAYER (player), cr, rect.x - player->target_rect.x,
@@ -662,15 +672,11 @@ swfmoz_player_render (SwfmozPlayer *player, GdkRegion *region)
     cairo_scale (cr, len / 32.0, len / 32.0);
     swfdec_gtk_player_draw_pause (cr);
   }
-  cairo_destroy (cr);
-  gdk_window_end_paint (player->target);
-
-  if (region == player->repaint) {
-    g_source_destroy (player->repaint_source);
-    g_source_unref (player->repaint_source);
-    player->repaint_source = NULL;
-    gdk_region_destroy (player->repaint);
-    player->repaint = NULL;
+  if (!has_cr) {
+    cairo_destroy (cr);
+    gdk_window_end_paint (player->target);
+  } else {
+    cairo_restore (cr);
   }
 }
 

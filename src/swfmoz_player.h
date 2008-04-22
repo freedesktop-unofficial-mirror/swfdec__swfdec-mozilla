@@ -56,6 +56,7 @@ struct _SwfmozPlayer {
 
   NPStream *		initial;		/* loader that spawned this player or NULL if none yet */
   gboolean		windowless;		/* TRUE if player communicates with the windowing system via the browser */
+  gboolean		opaque;			/* TRUE if the player should not allow translucency */
   GdkWindow *		target;			/* what we draw to */
   GdkRectangle		target_rect;		/* area in target that this plugin occupies */
 
@@ -77,7 +78,8 @@ struct _SwfmozPlayerClass {
 GType		swfmoz_player_get_type   	(void);
 
 SwfdecPlayer *	swfmoz_player_new	  	(NPP			instance,
-						 gboolean		windowless);
+						 gboolean		windowless,
+						 gboolean		opaque);
 void		swfmoz_player_remove		(SwfmozPlayer *		player);
 
 gboolean	swfmoz_player_set_initial_stream (SwfmozPlayer *	player,
@@ -91,6 +93,7 @@ void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 int			width,
 						 int			height);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
+						 cairo_t *		cr,
 						 GdkRegion *		region);
 gboolean	swfmoz_player_mouse_press	(SwfmozPlayer *		player,
 						 int			x,

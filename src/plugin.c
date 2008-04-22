@@ -34,6 +34,10 @@
 #include "plugin.h"
 #include "plugin_x11.h"
 
+/* This is here so we can quickly disable windowless support. For now it's 
+ * missing some features (cursor support) and redraws seem to be buggy */
+#define ENABLE_WINDOWLESS
+
 NPNetscapeFuncs mozilla_funcs;
 
 
@@ -91,6 +95,12 @@ gboolean
 plugin_pop_allow_popups (NPP instance)
 {
   return CallNPN_PopPopupsEnabledStateProc (mozilla_funcs.poppopupsenabledstate, instance);
+}
+
+gboolean
+plugin_get_value (NPP instance, NPNVariable var, gpointer data)
+{
+  return CallNPN_GetValueProc(mozilla_funcs.getvalue, instance, var, data) == NPERR_NO_ERROR;
 }
 
 /*** plugin implementation ***/
@@ -169,6 +179,28 @@ swfdec_mozilla_make_sure_this_thing_stays_in_memory (void)
   return TRUE;
 }
 
+#ifdef ENABLE_WINDOWLESS
+/* returns true if this instance can run windowless */
+static gboolean
+plugin_try_windowless (NPP instance)
+{
+  PRBool b = PR_FALSE;
+
+  /* Check if the plugin can do windowless.
+   * See http://bugzilla.mozilla.org/show_bug.cgi?id=386537 */
+  if (CallNPN_GetValueProc(mozilla_funcs.getvalue, instance,
+	NPNVSupportsWindowless, (void *) &b) || b != PR_TRUE)
+    return FALSE;
+
+  /* Try making us windowless */
+  if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
+  	NPPVpluginWindowBool, (void *) PR_FALSE))
+    return FALSE;
+
+  return TRUE;
+}
+#endif
+
 static NPError
 plugin_new (NPMIMEType mime_type, NPP instance,
     uint16_t mode, int16_t argc, char *argn[], char *argv[],
@@ -176,6 +208,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 {
   SwfdecPlayer *player;
   int i;
+  gboolean windowless = FALSE, opaque = FALSE;
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -186,23 +219,31 @@ plugin_new (NPMIMEType mime_type, NPP instance,
 		"Please use the --with-plugin-dir configure option to install it into a different place.\n");
     return NPERR_INVALID_INSTANCE_ERROR;
   }
-#if 0
-  /* see https://bugzilla.mozilla.org/show_bug.cgi?id=137189 for why this doesn't work
-   * probably needs user agent sniffing to make this work correctly (iff gecko 
-   * implements it
-   */
-  if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
-  	NPPVpluginWindowBool, (void *) PR_FALSE))
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
-  if (CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
-	NPPVpluginTransparentBool, (void *) PR_TRUE))
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
-#endif
 
   /* Init functioncalling (even g_type_init) gets postponed until we know we
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
-  instance->pdata = player = swfmoz_player_new (instance, FALSE);
+
+#ifdef ENABLE_WINDOWLESS
+  /* parse pre-creation properties */
+  for (i = 0; i < argc; i++) {
+    if (g_ascii_strcasecmp (argn[i], "wmode") == 0) {
+      if (g_ascii_strcasecmp (argv[i], "transparent") == 0) {
+	windowless = plugin_try_windowless (instance);
+	opaque = FALSE;
+      } else if (g_ascii_strcasecmp (argv[i], "opaque") == 0) {
+	windowless = plugin_try_windowless (instance);
+	if (windowless) {
+	  CallNPN_SetValueProc (mozilla_funcs.setvalue, instance,
+	    NPPVpluginTransparentBool, (void *) PR_FALSE);
+	  opaque = TRUE;
+	}
+      }
+    }
+  }
+#endif
+
+  instance->pdata = player = swfmoz_player_new (instance, windowless, opaque);
 
   /* set the properties we support */
   /* FIXME: figure out how variables override each other */
@@ -217,6 +258,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
     } else if (g_ascii_strcasecmp (argn[i], "type") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "width") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "height") == 0) {
+    } else if (g_ascii_strcasecmp (argn[i], "wmode") == 0) {
     } else if (g_ascii_strcasecmp (argn[i], "scale") == 0) {
       SwfdecScaleMode scale;
       if (g_ascii_strcasecmp (argv[i], "noborder") == 0) {
@@ -370,8 +412,9 @@ plugin_handle_event (NPP instance, void *eventp)
   if (instance == NULL || !SWFMOZ_IS_PLAYER (instance->pdata))
     return FALSE;
 
-  /* FIXME: implement */
-  return FALSE;
+  plugin_x11_handle_event (instance->pdata, eventp);
+
+  return TRUE;
 }
 
 static void
