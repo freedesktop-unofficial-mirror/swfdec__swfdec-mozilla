@@ -503,6 +503,7 @@ swfmoz_player_set_initial_stream (SwfmozPlayer *player, NPStream *stream)
     swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
   }
   swfdec_url_free (url);
+  swfmoz_player_invalidate (player);
 
   return TRUE;
 }
