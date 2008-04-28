@@ -60,7 +60,6 @@ struct _SwfmozPlayer {
   GdkWindow *		target;			/* what we draw to */
   GdkRectangle		target_rect;		/* area in target that this plugin occupies */
 
-  /* for windowed operation */
   GSource *		repaint_source;		/* set when repaint is necessary */
   GdkRegion *		repaint;		/* area to repaint or NULL if none */
 
@@ -69,6 +68,7 @@ struct _SwfmozPlayer {
   GtkMenu *		menu;			/* right-click menu */
   GtkTreeModel *	loaders;		/* loaders used in this players */
   SwfmozConfig *	config;			/* autoplay configuration */
+  GtkWidget *		fullscreen;		/* fullscreen widget */
 };
 
 struct _SwfmozPlayerClass {
@@ -92,6 +92,8 @@ void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 int			y,
 						 int			width,
 						 int			height);
+void		swfmoz_player_set_allow_popups	(SwfmozPlayer *		player,
+						 gboolean		allow);
 void		swfmoz_player_render		(SwfmozPlayer *		player,
 						 cairo_t *		cr,
 						 GdkRegion *		region);

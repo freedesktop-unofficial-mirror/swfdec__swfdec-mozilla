@@ -297,6 +297,23 @@ swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
     swfmoz_player_invalidate (player);
   } else if (g_str_equal (pspec->name, "mouse-cursor")) {
     swfmoz_player_update_cursor (player);
+  } else if (g_str_equal (pspec->name, "fullscreen")) {
+    gboolean fullscreen = swfdec_player_get_fullscreen (SWFDEC_PLAYER (player));
+    if (fullscreen && player->fullscreen == NULL) {
+      GtkWidget *window, *child;
+      
+      player->fullscreen = window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+      child = swfdec_gtk_widget_new_fullscreen (SWFDEC_PLAYER (player));
+      gtk_container_add (GTK_CONTAINER (window), child);
+      gtk_widget_show_all (window);
+      gtk_window_fullscreen (GTK_WINDOW (window));
+      gtk_widget_grab_focus (child);
+      g_object_ref (window);
+    } else if (!fullscreen && player->fullscreen != NULL) {
+      gtk_widget_destroy (player->fullscreen);
+      g_object_unref (player->fullscreen);
+      player->fullscreen = NULL;
+    }
   }
 }
 
@@ -361,6 +378,11 @@ swfmoz_player_dispose (GObject *object)
   if (player->loaders) {
     g_object_unref (player->loaders);
     player->loaders = NULL;
+  }
+  if (player->fullscreen != NULL) {
+    gtk_widget_destroy (player->fullscreen);
+    g_object_unref (player->fullscreen);
+    player->fullscreen = NULL;
   }
 
   g_object_unref (player->config);
@@ -680,6 +702,18 @@ swfmoz_player_render (SwfmozPlayer *player, cairo_t *cr, GdkRegion *region)
   }
 }
 
+void
+swfmoz_player_set_allow_popups (SwfmozPlayer *player, gboolean allow)
+{
+  g_return_if_fail (SWFMOZ_IS_PLAYER (player));
+
+  swfdec_player_set_allow_fullscreen (SWFDEC_PLAYER (player), allow);
+  if (allow)
+    plugin_push_allow_popups (player->instance, TRUE);
+  else
+    plugin_pop_allow_popups (player->instance);
+}
+
 gboolean
 swfmoz_player_mouse_press (SwfmozPlayer *player, int x, int y, guint button)
 {
@@ -697,9 +731,9 @@ swfmoz_player_mouse_press (SwfmozPlayer *player, int x, int y, guint button)
     return FALSE;
 
   if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player))) {
-    plugin_push_allow_popups (player->instance, TRUE);
+    swfmoz_player_set_allow_popups (player, TRUE);
     ret = swfdec_player_mouse_press (SWFDEC_PLAYER (player), x, y, button);
-    plugin_pop_allow_popups (player->instance);
+    swfmoz_player_set_allow_popups (player, FALSE);
   }
   return ret;
 }
@@ -720,9 +754,9 @@ swfmoz_player_mouse_release (SwfmozPlayer *player, int x, int y, guint button)
     return FALSE;
 
   if (swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player))) {
-    plugin_push_allow_popups (player->instance, TRUE);
+    swfmoz_player_set_allow_popups (player, TRUE);
     ret = swfdec_player_mouse_release (SWFDEC_PLAYER (player), x, y, button);
-    plugin_pop_allow_popups (player->instance);
+    swfmoz_player_set_allow_popups (player, FALSE);
   } else {
     if (button == 1) {
       swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
