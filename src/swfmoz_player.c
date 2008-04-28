@@ -290,6 +290,17 @@ swfmoz_player_update_cursor (SwfmozPlayer *player)
 }
 
 static void
+swfmoz_player_fullscreen_destroyed (GtkWidget *widget, SwfmozPlayer *player)
+{
+  player->fullscreen = NULL;
+  if (swfdec_player_get_fullscreen (SWFDEC_PLAYER (player))) {
+    swfdec_player_set_focus (SWFDEC_PLAYER (player), TRUE);
+    swfdec_player_key_press (SWFDEC_PLAYER (player), SWFDEC_KEY_ESCAPE, 0);
+  }
+  swfmoz_player_invalidate (player);
+}
+
+static void
 swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
 {
   if (g_str_equal (pspec->name, "playing")) {
@@ -307,12 +318,12 @@ swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
       gtk_container_add (GTK_CONTAINER (window), child);
       gtk_widget_show_all (window);
       gtk_window_fullscreen (GTK_WINDOW (window));
+      g_signal_connect (window, "destroy", 
+	  G_CALLBACK (swfmoz_player_fullscreen_destroyed), player);
       gtk_widget_grab_focus (child);
-      g_object_ref (window);
     } else if (!fullscreen && player->fullscreen != NULL) {
       gtk_widget_destroy (player->fullscreen);
-      g_object_unref (player->fullscreen);
-      player->fullscreen = NULL;
+      g_assert (player->fullscreen == NULL);
     }
   }
 }
@@ -348,6 +359,12 @@ swfmoz_player_dispose (GObject *object)
 {
   SwfmozPlayer *player = SWFMOZ_PLAYER (object);
 
+  /* do this first or we'll get unhappy */
+  if (player->fullscreen != NULL) {
+    gtk_widget_destroy (player->fullscreen);
+    g_assert (player->fullscreen == NULL);
+  }
+
   if (player->menu) {
     g_signal_handlers_disconnect_matched (player, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, 
 	swfmoz_player_menu_notify_playing, NULL);
@@ -378,11 +395,6 @@ swfmoz_player_dispose (GObject *object)
   if (player->loaders) {
     g_object_unref (player->loaders);
     player->loaders = NULL;
-  }
-  if (player->fullscreen != NULL) {
-    gtk_widget_destroy (player->fullscreen);
-    g_object_unref (player->fullscreen);
-    player->fullscreen = NULL;
   }
 
   g_object_unref (player->config);
@@ -661,7 +673,7 @@ swfmoz_player_render (SwfmozPlayer *player, cairo_t *cr, GdkRegion *region)
   }
 
   /* second, check if we have anything to draw */
-  if (player->target == NULL)
+  if (player->target == NULL || player->fullscreen)
     return;
 
   if (!has_cr) {
