@@ -563,24 +563,36 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
   g_return_if_fail (target == NULL || GDK_IS_WINDOW (target));
 
-  if (player->target) {
-    g_object_unref (player->target);
+  if (target != player->target) {
+    if (player->target) {
+      g_object_unref (player->target);
+    }
+    player->target = target;
+    if (target) {
+      cairo_t *cr;
+      SwfdecRenderer *renderer;
+
+      g_object_ref (target);
+      cr = gdk_cairo_create (target);
+      renderer = swfdec_renderer_new_for_player (cairo_get_target (cr), 
+	  SWFDEC_PLAYER (player));
+      swfdec_player_set_renderer (SWFDEC_PLAYER (player), renderer);
+      g_object_unref (renderer);
+      cairo_destroy (cr);
+
+      swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
+	  gdk_window_get_toplevel (target));
+      swfmoz_player_update_cursor (player);
+    } else {
+      swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
+	  NULL);
+    }
   }
-  player->target = target;
   player->target_rect.x = x;
   player->target_rect.y = y;
   player->target_rect.width = width;
   player->target_rect.height = height;
   swfdec_player_set_size (SWFDEC_PLAYER (player), width, height);
-  if (target) {
-    g_object_ref (target);
-    swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
-	gdk_window_get_toplevel (target));
-    swfmoz_player_update_cursor (player);
-  } else {
-    swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
-	NULL);
-  }
 }
 
 static void
