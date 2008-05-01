@@ -698,7 +698,11 @@ swfmoz_player_render (SwfmozPlayer *player, cairo_t *cr, GdkRegion *region)
   cairo_clip (cr);
   /* paint it */
   if (player->opaque) {
-    cairo_set_source_rgb (cr, 1, 1, 1);
+    guint bgcolor = swfdec_player_get_background_color (SWFDEC_PLAYER (player));
+    cairo_set_source_rgb (cr, 
+	((bgcolor >> 16) & 0xFF) / 255.0,
+	((bgcolor >> 8) & 0xFF) / 255.0,
+	(bgcolor & 0xFF) / 255.0);
     cairo_paint (cr);
   }
   cairo_translate (cr, player->target_rect.x, player->target_rect.y);
