@@ -209,9 +209,15 @@ plugin_new (NPMIMEType mime_type, NPP instance,
   SwfdecPlayer *player;
   int i;
   gboolean windowless = FALSE, opaque = FALSE;
+  NPNToolkitType toolkit = 0;
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
+
+  /* we must be GTK 2 */
+  if (CallNPN_GetValueProc(mozilla_funcs.getvalue, instance,
+	NPNVToolkit, (void *) &toolkit) || toolkit != NPNVGtk2)
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
   if (!swfdec_mozilla_make_sure_this_thing_stays_in_memory ()) {
     g_printerr ("Ensuring the plugin stays in memory did not work.\n"
@@ -424,8 +430,6 @@ plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyD
 NPError
 NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 {
-  NPNToolkitType toolkit = 0;
-
   if (moz_funcs == NULL || plugin_funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
@@ -437,11 +441,6 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
   mozilla_funcs = *moz_funcs;
-
-  /* we must be GTK 2 */
-  if (CallNPN_GetValueProc(mozilla_funcs.getvalue, NULL,
-	NPNVToolkit, (void *) &toolkit) || toolkit != NPNVGtk2)
-    return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
   memset (plugin_funcs, 0, sizeof (NPPluginFuncs));
   plugin_funcs->size = sizeof (NPPluginFuncs);
