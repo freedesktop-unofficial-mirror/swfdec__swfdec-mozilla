@@ -297,7 +297,7 @@ swfmoz_player_update_background (SwfmozPlayer *player)
   GdkColor bgcolor;
   guint bg;
 
-  if (window == NULL)
+  if (player->windowless || window == NULL)
     return;
 
   bg = swfdec_player_get_background_color (SWFDEC_PLAYER (player));
