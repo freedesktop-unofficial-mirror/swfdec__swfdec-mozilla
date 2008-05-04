@@ -71,6 +71,7 @@ swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
     "Benjamin Otte <otte@gnome.org>",
     "David Schleef <ds@schleef.org>",
     "Eric Anholt <eric@anholt.net>",
+    "Pekka Lampila <pekka.lampila@iki.fi>",
     NULL,
   };
   static const char *artists[] = {
