@@ -165,7 +165,6 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
     if (player->target == NULL) {
       GdkWindowAttr attr;
       GdkWindow *parent, *window;
-      GdkColor color;
 
       parent = gdk_window_foreign_new (xwindow);
       if (parent == NULL) {
@@ -185,9 +184,6 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
       attr.window_type = GDK_WINDOW_CHILD;
       attr.wclass = GDK_INPUT_OUTPUT;
       window = gdk_window_new (parent, &attr, GDK_WA_X | GDK_WA_Y);
-      color.red = color.green = color.blue = 65535;
-      gdk_rgb_find_color (gdk_window_get_colormap (window), &color);
-      gdk_window_set_background (window, &color);
       gdk_window_add_filter (window, plugin_x11_filter_event, player);
       gdk_window_show (window);
       swfmoz_player_set_target (player, window, 0, 0, width, height);
