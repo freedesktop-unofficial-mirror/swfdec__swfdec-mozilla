@@ -168,6 +168,7 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   GtkWidget *vbox, *align, *widget;
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
+  GtkTreePath *path;
   
   vbox = gtk_vbox_new (FALSE, 3);
   
@@ -203,6 +204,12 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_ERROR);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
+
+  gtk_tree_selection_set_mode (gtk_tree_view_get_selection
+                               (GTK_TREE_VIEW (widget)), GTK_SELECTION_BROWSE);
+  path = gtk_tree_path_new_from_indices (0, -1);
+  gtk_tree_view_set_cursor (GTK_TREE_VIEW (widget), path, NULL, FALSE);
+  gtk_tree_path_free (path);
 
   align = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (align),
