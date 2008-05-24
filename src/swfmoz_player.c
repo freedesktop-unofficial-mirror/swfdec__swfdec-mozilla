@@ -71,6 +71,7 @@ swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
     "Benjamin Otte <otte@gnome.org>",
     "David Schleef <ds@schleef.org>",
     "Eric Anholt <eric@anholt.net>",
+    "Pekka Lampila <pekka.lampila@iki.fi>",
     NULL,
   };
   static const char *artists[] = {
@@ -290,6 +291,24 @@ swfmoz_player_update_cursor (SwfmozPlayer *player)
 }
 
 static void
+swfmoz_player_update_background (SwfmozPlayer *player)
+{
+  GdkWindow *window = player->target;
+  GdkColor bgcolor;
+  guint bg;
+
+  if (player->windowless || window == NULL)
+    return;
+
+  bg = swfdec_player_get_background_color (SWFDEC_PLAYER (player));
+  bgcolor.red = 0x101 * ((bg >> 16) & 0xFF);
+  bgcolor.green = 0x101 * ((bg >> 8) & 0xFF);
+  bgcolor.blue = 0x101 * (bg & 0xFF);
+  gdk_rgb_find_color (gdk_drawable_get_colormap (window), &bgcolor);
+  gdk_window_set_background (window, &bgcolor);
+}
+
+static void
 swfmoz_player_fullscreen_destroyed (GtkWidget *widget, SwfmozPlayer *player)
 {
   player->fullscreen = NULL;
@@ -325,6 +344,8 @@ swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
       gtk_widget_destroy (player->fullscreen);
       g_assert (player->fullscreen == NULL);
     }
+  } else if (g_str_equal (pspec->name, "background-color")) {
+    swfmoz_player_update_background (player);
   }
 }
 
@@ -583,6 +604,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
       swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
 	  gdk_window_get_toplevel (target));
       swfmoz_player_update_cursor (player);
+      swfmoz_player_update_background (player);
     } else {
       swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player), 
 	  NULL);
