@@ -210,7 +210,7 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   gtk_container_add (GTK_CONTAINER (align), widget);
   gtk_box_pack_start (GTK_BOX (vbox), align, TRUE, TRUE, 0);
 
-  widget = gtk_button_new_with_mnemonic ("_Save media as");
+  widget = gtk_button_new_with_mnemonic ("_Save...");
   g_signal_connect (widget, "clicked", G_CALLBACK (swfmoz_dialog_save_media), dialog);
   align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
   gtk_container_add (GTK_CONTAINER (align), widget);
