@@ -48,8 +48,8 @@ swfmoz_loader_dispose (GObject *object)
 }
 
 static void
-swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player, 
-    const char *url, SwfdecLoaderRequest request, SwfdecBuffer *buffer)
+swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
+    const char *url, SwfdecBuffer *buffer)
 {
   SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
@@ -61,13 +61,9 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     mozplay->initial = NULL;
   } else {
     g_object_ref (moz);
-    if (request == SWFDEC_LOADER_REQUEST_POST) {
-      if (buffer) {
-	plugin_post_url_notify (moz->instance, url, NULL, 
-	    (char *) buffer->data, buffer->length, moz);
-      } else {
-	plugin_post_url_notify (moz->instance, url, NULL, NULL, 0, moz);
-      }
+    if (buffer) {
+      plugin_post_url_notify (moz->instance, url, NULL, (char *)buffer->data,
+	  buffer->length, moz);
     } else {
       plugin_get_url_notify (moz->instance, url, NULL, moz);
     }
