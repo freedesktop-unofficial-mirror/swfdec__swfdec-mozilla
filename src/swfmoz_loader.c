@@ -49,7 +49,8 @@ swfmoz_loader_dispose (GObject *object)
 
 static void
 swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
-    const char *url, SwfdecBuffer *buffer)
+    const char *url, SwfdecBuffer *buffer, guint header_count,
+    const char **header_names, const char ** header_values)
 {
   SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
