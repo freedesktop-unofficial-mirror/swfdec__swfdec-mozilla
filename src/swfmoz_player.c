@@ -209,14 +209,66 @@ swfmoz_player_redraw (SwfmozPlayer *player, const SwfdecRectangle *extents,
   }
 }
 
+static SwfdecBuffer *
+swfmoz_player_format_headers (guint header_count, const char **header_names,
+    const char **header_values)
+{
+  GString *string;
+  guint i;
+  gsize len;
+
+  g_return_val_if_fail (header_count == 0 || header_names != NULL, NULL);
+  g_return_val_if_fail (header_count == 0 || header_values != NULL, NULL);
+
+  string = g_string_new ("");
+  for (i = 0; i < header_count; i++) {
+    g_string_append (string, header_names[i]);
+    g_string_append (string, ": ");
+    g_string_append (string, header_values[i]);
+    g_string_append (string, "\n");
+  }
+  g_string_append (string, "\n\n");
+
+  len = string->len;
+  return swfdec_buffer_new_for_data (
+      (unsigned char *)g_string_free (string, FALSE), len);
+}
+
+/* Returns a new buffer with the headers prepended, suitable for passing to
+ * plugin_post_url_notify */
+SwfdecBuffer *
+swfmoz_player_add_headers (SwfdecBuffer *data, guint header_count,
+    const char **header_names, const char **header_values)
+{
+  SwfdecBufferQueue *queue;
+  SwfdecBuffer *buffer;
+
+  g_return_val_if_fail (data != NULL, NULL);
+
+  queue = swfdec_buffer_queue_new ();
+  swfdec_buffer_queue_push (queue, swfmoz_player_format_headers (
+	header_count, header_names, header_values));
+  swfdec_buffer_queue_push (queue, swfdec_buffer_ref (data));
+
+  buffer = swfdec_buffer_queue_pull (queue,
+      swfdec_buffer_queue_get_depth (queue));
+  swfdec_buffer_queue_unref (queue);
+
+  return buffer;
+}
+
 static void
 swfmoz_player_launch (SwfmozPlayer *player, const char *url,
-    const char *target, SwfdecBuffer *data, gpointer unused)
+    const char *target, SwfdecBuffer *data, guint header_count,
+    const char **header_names, const char **header_values,  gpointer unused)
 {
   if (data) {
-    plugin_post_url (player->instance, url, target, (const char *)data->data,
-	data->length);
+  // use the notify version of the function so headers can be sent
+  // we don't actually care about the notify
+    plugin_post_url_notify (player->instance, url, target,
+	(const char *)data->data, data->length, NULL);
   } else {
+    // FIXME: no way to send headers here?
     plugin_get_url (player->instance, url, target);
   }
 }

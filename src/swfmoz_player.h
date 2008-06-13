@@ -112,7 +112,10 @@ gboolean	swfmoz_player_mouse_move	(SwfmozPlayer *		player,
 char *		swfmoz_player_get_filename	(SwfmozPlayer *		player);
 void		swfmoz_player_add_variables	(SwfmozPlayer *		player,
 						 const char *		variables);
-					 
+SwfdecBuffer *	swfmoz_player_add_headers	(SwfdecBuffer *		data,
+						 guint			header_count,
+						 const char **		header_names,
+						 const char **		header_values);
 
 G_END_DECLS
 #endif

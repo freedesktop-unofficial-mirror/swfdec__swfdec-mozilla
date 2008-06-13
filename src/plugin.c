@@ -417,7 +417,14 @@ plugin_handle_event (NPP instance, void *eventp)
 static void
 plugin_url_notify (NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-  SwfdecStream *stream = SWFDEC_STREAM (notifyData);
+  SwfdecStream *stream;
+
+  // plugin_post_url_notify is used for launch so headers can be sent, but we
+  // don't actually care about the notify
+  if (notifyData == NULL)
+    return;
+
+  stream = SWFDEC_STREAM (notifyData);
 
   if (reason == NPRES_NETWORK_ERR) {
     swfdec_stream_error (stream, "Network error");
