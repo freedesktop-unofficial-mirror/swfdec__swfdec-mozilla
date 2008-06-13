@@ -47,10 +47,32 @@ swfmoz_loader_dispose (GObject *object)
   G_OBJECT_CLASS (swfmoz_loader_parent_class)->dispose (object);
 }
 
+static SwfdecBuffer *
+swfmoz_loader_format_headers (guint header_count, const char **header_names,
+    const char **header_values)
+{
+  GString *string;
+  guint i;
+  gsize len;
+
+  string = g_string_new ("");
+  for (i = 0; i < header_count; i++) {
+    g_string_append (string, header_names[i]);
+    g_string_append (string, ": ");
+    g_string_append (string, header_values[i]);
+    g_string_append (string, "\n");
+  }
+  g_string_append (string, "\n\n");
+
+  len = string->len;
+  return swfdec_buffer_new_for_data (
+      (unsigned char *)g_string_free (string, FALSE), len);
+}
+
 static void
 swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     const char *url, SwfdecBuffer *buffer, guint header_count,
-    const char **header_names, const char ** header_values)
+    const char **header_names, const char **header_values)
 {
   SwfmozPlayer *mozplay = SWFMOZ_PLAYER (player);
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
@@ -63,9 +85,23 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   } else {
     g_object_ref (moz);
     if (buffer) {
-      plugin_post_url_notify (moz->instance, url, NULL, (char *)buffer->data,
-	  buffer->length, moz);
+      SwfdecBufferQueue *queue;
+      SwfdecBuffer *combined;
+
+      queue = swfdec_buffer_queue_new ();
+      swfdec_buffer_queue_push (queue, swfmoz_loader_format_headers (
+	    header_count, header_names, header_values));
+      swfdec_buffer_queue_push (queue, swfdec_buffer_ref (buffer));
+
+      combined = swfdec_buffer_queue_pull (queue,
+	  swfdec_buffer_queue_get_depth (queue));
+      plugin_post_url_notify (moz->instance, url, NULL, (char *)combined->data,
+	  combined->length, moz);
+      swfdec_buffer_unref (combined);
+
+      swfdec_buffer_queue_unref (queue);
     } else {
+      // FIXME: Impossible to set headers here?
       plugin_get_url_notify (moz->instance, url, NULL, moz);
     }
   }
