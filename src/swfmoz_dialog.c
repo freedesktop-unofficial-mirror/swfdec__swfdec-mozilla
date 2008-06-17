@@ -191,18 +191,11 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_TYPE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
-  renderer = gtk_cell_renderer_progress_new ();
-  column = gtk_tree_view_column_new_with_attributes ("Done", renderer,
-    "value", SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, NULL);
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Status", renderer,
+    "text", SWFMOZ_LOADER_COLUMN_STATUS, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_PERCENT_LOADED);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
-
-  renderer = gtk_cell_renderer_toggle_new ();
-  column = gtk_tree_view_column_new_with_attributes ("Error", renderer,
-    "active", SWFMOZ_LOADER_COLUMN_ERROR, NULL);
-  gtk_tree_view_column_set_resizable (column, TRUE);
-  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_ERROR);
+  gtk_tree_view_column_set_sort_column_id (column, SWFMOZ_LOADER_COLUMN_STATUS);
   gtk_tree_view_append_column (GTK_TREE_VIEW (widget), column);
 
   gtk_tree_selection_set_mode (gtk_tree_view_get_selection
@@ -222,7 +215,7 @@ swfmoz_dialog_get_media_page (SwfmozDialog *dialog)
   align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
   gtk_container_add (GTK_CONTAINER (align), widget);
   gtk_box_pack_end (GTK_BOX (vbox), align, FALSE, TRUE, 0);
-  
+
   return vbox;
 }
 

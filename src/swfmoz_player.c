@@ -491,8 +491,8 @@ swfmoz_player_init (SwfmozPlayer *player)
   player->context = g_main_context_default ();
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
-      SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING, 
-      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_UINT));
+      SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING,
+      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_STRING));
 }
 
 SwfdecPlayer *
@@ -518,22 +518,36 @@ swfmoz_player_new (NPP instance, gboolean windowless, gboolean opaque)
 static void
 swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoader *loader)
 {
-  glong percent;
+  goffset loaded, size;
   gboolean eof, error;
   const SwfdecURL *url;
   const char *url_string;
+  char *str_loaded, *str_size;
+  gchar *status;
 
-  percent = swfdec_loader_get_size (loader);
-  if (percent == 0) {
-    percent = 100;
-  } else if (percent < 0) {
-    percent = 50;
-  } else {
-    percent = 100 * swfdec_loader_get_loaded (loader) / percent;
-    percent = CLAMP (percent, 0, 100);
-  }
+  loaded = swfdec_loader_get_loaded (loader);
+  size = swfdec_loader_get_size (loader);
+
   /* FIXME: swfdec needs a function for this */
   g_object_get (G_OBJECT (loader), "eof", &eof, "error", &error, NULL);
+
+  if (error == TRUE) {
+    status = g_strdup("error");
+  } else {
+    str_loaded = g_format_size_for_display(loaded);
+    str_size = g_format_size_for_display(size);
+
+    if (size == loaded)
+      status = g_strdup_printf("%s", str_loaded);
+    else if (size < 0)
+      status = g_strdup_printf("at %s", str_loaded);
+    else
+      status = g_strdup_printf("%s of %s", str_loaded, str_size);
+
+    g_free (str_loaded);
+    g_free (str_size);
+  }
+
   url = swfdec_loader_get_url (loader);
   if (url) {
     url_string = swfdec_url_get_url (url);
@@ -550,8 +564,10 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     SWFMOZ_LOADER_COLUMN_EOF, eof,
     SWFMOZ_LOADER_COLUMN_ERROR, error,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
-    SWFMOZ_LOADER_COLUMN_PERCENT_LOADED, (guint) percent,
+    SWFMOZ_LOADER_COLUMN_STATUS, status,
     -1);
+
+  g_free(status);
 }
 
 static gboolean
