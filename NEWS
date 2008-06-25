@@ -1,4 +1,14 @@
 
+ 0.7.2 ("Do the Handicapped Go to Hell?")
+
+This release brings Swfdec ahead of the competition!
+- support fullscreen
+- remember files to be autoplayed
+- implement windowless support in Firefox 3
+- don't hang the browser on high-CPU files
+- work in gtk-webkit
+- make properties dialog more HIGgy
+
  0.6.0 ("It'll choke on the sweet air of freedom.")
 
 And here's the first long-term release of Swfdec-mozilla.
