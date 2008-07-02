@@ -182,7 +182,7 @@ swfmoz_player_idle_redraw (gpointer playerp)
 }
 
 static void
-swfmoz_player_redraw (SwfmozPlayer *player, const SwfdecRectangle *extents, 
+swfmoz_player_redraw (SwfmozPlayer *player,
     const SwfdecRectangle *rects, guint n_rects, gpointer unused)
 {
   GdkRegion *region;
@@ -277,7 +277,7 @@ static void
 swfmoz_player_invalidate (SwfmozPlayer *player)
 {
   SwfdecRectangle rect = { 0, 0, player->target_rect.width, player->target_rect.height };
-  swfmoz_player_redraw (player, &rect, &rect, 1, NULL);
+  swfmoz_player_redraw (player, &rect, 1, NULL);
 }
 
 /* function stolen from SwfdecGtkWidget */
@@ -793,8 +793,7 @@ swfmoz_player_render (SwfmozPlayer *player, cairo_t *cr, GdkRegion *region)
   }
   cairo_translate (cr, player->target_rect.x, player->target_rect.y);
   gdk_region_get_clipbox (region, &rect);
-  swfdec_player_render (SWFDEC_PLAYER (player), cr, rect.x - player->target_rect.x,
-      rect.y - player->target_rect.y, rect.width, rect.height);
+  swfdec_player_render (SWFDEC_PLAYER (player), cr);
   /* paint optional pause sign */
   if (!swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player)) &&
       swfdec_player_get_url (SWFDEC_PLAYER (player)) != NULL) {
