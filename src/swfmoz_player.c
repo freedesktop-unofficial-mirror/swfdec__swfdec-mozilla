@@ -211,7 +211,7 @@ swfmoz_player_redraw (SwfmozPlayer *player,
 
 static SwfdecBuffer *
 swfmoz_player_format_headers (guint header_count, const char **header_names,
-    const char **header_values)
+    const char **header_values, gsize content_length)
 {
   GString *string;
   guint i;
@@ -220,14 +220,16 @@ swfmoz_player_format_headers (guint header_count, const char **header_names,
   g_return_val_if_fail (header_count == 0 || header_names != NULL, NULL);
   g_return_val_if_fail (header_count == 0 || header_values != NULL, NULL);
 
-  string = g_string_new ("");
+  string = g_string_new ("Content-Length: ");
+  g_string_append_printf (string, "%"G_GSIZE_FORMAT, content_length);
+  g_string_append (string, "\n");
   for (i = 0; i < header_count; i++) {
     g_string_append (string, header_names[i]);
     g_string_append (string, ": ");
     g_string_append (string, header_values[i]);
     g_string_append (string, "\n");
   }
-  g_string_append (string, "\n\n");
+  g_string_append (string, "\n");
 
   len = string->len;
   return swfdec_buffer_new_for_data (
@@ -247,7 +249,7 @@ swfmoz_player_add_headers (SwfdecBuffer *data, guint header_count,
 
   queue = swfdec_buffer_queue_new ();
   swfdec_buffer_queue_push (queue, swfmoz_player_format_headers (
-	header_count, header_names, header_values));
+	header_count, header_names, header_values, data->length));
   swfdec_buffer_queue_push (queue, swfdec_buffer_ref (data));
 
   buffer = swfdec_buffer_queue_pull (queue,
