@@ -493,8 +493,7 @@ swfmoz_player_init (SwfmozPlayer *player)
   player->context = g_main_context_default ();
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,
-      SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING,
-      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_STRING));
+      SWFMOZ_TYPE_LOADER, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING));
 }
 
 SwfdecPlayer *
@@ -521,7 +520,7 @@ static void
 swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoader *loader)
 {
   goffset loaded, size;
-  gboolean eof, error;
+  gboolean error;
   const SwfdecURL *url;
   const char *url_string;
   char *str_loaded, *str_size;
@@ -531,7 +530,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   size = swfdec_loader_get_size (loader);
 
   /* FIXME: swfdec needs a function for this */
-  g_object_get (G_OBJECT (loader), "eof", &eof, "error", &error, NULL);
+  g_object_get (G_OBJECT (loader), "error", &error, NULL);
 
   if (error == TRUE) {
     status = g_strdup("error");
@@ -539,7 +538,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     str_loaded = g_format_size_for_display(loaded);
     str_size = g_format_size_for_display(size);
 
-    if (size == loaded)
+    if (swfdec_stream_is_complete (SWFDEC_STREAM (loader)))
       status = g_strdup_printf("%s", str_loaded);
     else if (size < 0)
       status = g_strdup_printf("at %s", str_loaded);
@@ -563,8 +562,6 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   gtk_list_store_set (store, iter,
     SWFMOZ_LOADER_COLUMN_LOADER, loader,
     SWFMOZ_LOADER_COLUMN_URL, url_string,
-    SWFMOZ_LOADER_COLUMN_EOF, eof,
-    SWFMOZ_LOADER_COLUMN_ERROR, error,
     SWFMOZ_LOADER_COLUMN_TYPE, swfmoz_loader_get_data_type_string (loader),
     SWFMOZ_LOADER_COLUMN_STATUS, status,
     -1);

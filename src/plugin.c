@@ -340,7 +340,7 @@ plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   swfmoz_loader_ensure_open (stream->pdata);
-  swfdec_stream_eof (stream->pdata);
+  swfdec_stream_close (stream->pdata);
   SWFMOZ_LOADER (stream->pdata)->stream = NULL;
   g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
