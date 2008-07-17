@@ -538,12 +538,13 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     str_loaded = g_format_size_for_display(loaded);
     str_size = g_format_size_for_display(size);
 
-    if (swfdec_stream_is_complete (SWFDEC_STREAM (loader)))
+    if (swfdec_stream_is_complete (SWFDEC_STREAM (loader))) {
       status = g_strdup_printf("%s", str_loaded);
-    else if (size < 0)
+    } else if (size < 0 || (size < loaded)) {
       status = g_strdup_printf("at %s", str_loaded);
-    else
+    } else {
       status = g_strdup_printf("%s of %s", str_loaded, str_size);
+    }
 
     g_free (str_loaded);
     g_free (str_size);
