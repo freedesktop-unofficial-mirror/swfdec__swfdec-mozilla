@@ -121,6 +121,8 @@ swfmoz_config_should_autoplay (SwfmozConfig *config, const SwfdecURL *url)
   g_return_val_if_fail (SWFMOZ_IS_CONFIG (config), FALSE);
 
   host = swfdec_url_get_host (url);
+  if (host == NULL)
+    host = swfdec_url_get_protocol (url);
 
   autoplay = swfmoz_config_read_autoplay (config, "global", autoplay);
   autoplay = swfmoz_config_read_autoplay (config, host, autoplay);
