@@ -115,7 +115,7 @@ swfmoz_config_read_autoplay (SwfmozConfig *config, const char *host,
 gboolean
 swfmoz_config_should_autoplay (SwfmozConfig *config, const SwfdecURL *url)
 {
-  const gchar *host;
+  const char *host;
   gboolean autoplay = FALSE;
 
   g_return_val_if_fail (SWFMOZ_IS_CONFIG (config), FALSE);
@@ -134,9 +134,15 @@ void
 swfmoz_config_set_autoplay (SwfmozConfig *config, const SwfdecURL *url,
 			    gboolean autoplay)
 {
+  const char *host;
+
   g_return_if_fail (SWFMOZ_IS_CONFIG (config));
 
-  g_key_file_set_boolean (config->keyfile, swfdec_url_get_host (url),
+  host = swfdec_url_get_host (url);
+  if (host == NULL)
+    host = swfdec_url_get_protocol (url);
+
+  g_key_file_set_boolean (config->keyfile, host,
 			  "autoplay", autoplay);
 
   swfmoz_config_save_file (config);
