@@ -60,6 +60,7 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   if (mozplay->initial) {
     swfmoz_loader_set_stream (moz, mozplay->initial);
     mozplay->initial = NULL;
+    moz->initial = TRUE;
   } else {
     g_object_ref (moz);
     if (buffer) {

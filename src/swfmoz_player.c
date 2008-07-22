@@ -522,9 +522,10 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   goffset loaded, size;
   gboolean error;
   const SwfdecURL *url;
+  SwfdecPlayer *player;
   const char *url_string;
   char *str_loaded, *str_size;
-  gchar *status;
+  gchar *status, *s = NULL;
 
   loaded = swfdec_loader_get_loaded (loader);
   size = swfdec_loader_get_size (loader);
@@ -551,7 +552,16 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   }
 
   url = swfdec_loader_get_url (loader);
-  if (url) {
+  player = SWFMOZ_LOADER (loader)->instance->pdata;
+  if (url && SWFMOZ_LOADER (loader)->initial && swfdec_player_get_variables (player)) {
+    /* This auto-appends the FlashVars to the reported URL. You should be able
+     * to copy/paste that URL easily without breakage that way 
+     * (minus cookies and referer) */
+    s = g_strconcat (swfdec_url_get_url (url),
+	swfdec_url_get_query (url) ? "&" : "?",
+	swfdec_player_get_variables (player), NULL);
+    url_string = s;
+  } else if (url) {
     url_string = swfdec_url_get_url (url);
   } else if (SWFMOZ_LOADER (loader)->stream) {
     url_string = SWFMOZ_LOADER (loader)->stream->url;
@@ -567,7 +577,8 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
     SWFMOZ_LOADER_COLUMN_STATUS, status,
     -1);
 
-  g_free(status);
+  g_free (status);
+  g_free (s);
 }
 
 static gboolean
