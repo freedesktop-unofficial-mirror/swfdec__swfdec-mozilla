@@ -1,4 +1,5 @@
 SUBDIRS= \
+	icons \
 	mozilla-sucks \
 	src
 

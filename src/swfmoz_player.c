@@ -81,7 +81,7 @@ swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
   };
 
   gtk_show_about_dialog (NULL, "program-name", "Swfdec",
-      "logo-icon-name", "swfdec",
+      "logo-icon-name", "swfdec-mozilla",
       "authors", authors,
       "artists", artists,
       "comments", "Play Flash content in your browser",
