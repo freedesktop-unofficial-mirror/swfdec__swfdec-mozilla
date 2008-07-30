@@ -1,4 +1,11 @@
 
+ 0.7.4 ("Whites won again")
+
+Not much has happened here since the last release:
+- update to changed APIs
+- send proper HTTP headers
+- HIG-improve the properties dialog
+
  0.7.2 ("Do the Handicapped Go to Hell?")
 
 This release brings Swfdec ahead of the competition!
