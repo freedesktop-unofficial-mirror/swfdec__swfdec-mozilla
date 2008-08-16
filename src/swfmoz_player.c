@@ -65,6 +65,31 @@ swfmoz_player_menu_notify_audio (SwfdecGtkPlayer *player, GParamSpec *pspec,
 }
 
 static void
+swfmoz_player_menu_autoplay_always_toggled (GtkCheckMenuItem *item,
+    SwfmozPlayer* player)
+{
+  gboolean item_active = gtk_check_menu_item_get_active (item);
+  swfmoz_config_set_global_autoplay (player->config, item_active);
+}
+
+static void
+swfmoz_player_menu_autoplay_remember_last_toggled (GtkCheckMenuItem *item,
+    SwfmozPlayer* player)
+{
+  gboolean item_active = gtk_check_menu_item_get_active (item);
+  if (item_active && swfmoz_config_has_global_key (player->config))
+    swfmoz_config_remove_global_autoplay (player->config);
+}
+
+static void
+swfmoz_player_menu_autoplay_never_toggled (GtkCheckMenuItem *item,
+    SwfmozPlayer* player)
+{
+  gboolean item_active = gtk_check_menu_item_get_active (item);
+  swfmoz_config_set_global_autoplay (player->config, !item_active);
+}
+
+static void
 swfmoz_player_menu_about (GtkMenuItem *item, SwfmozPlayer *player)
 {
   static const char *authors[] = {
@@ -95,29 +120,60 @@ static void
 swfmoz_player_popup_menu (SwfmozPlayer *player)
 {
   if (player->menu == NULL) {
-    GtkWidget *item;
+    GtkWidget *item, *submenu;
 
     player->menu = GTK_MENU (gtk_menu_new ());
     g_object_ref_sink (player->menu);
     
     item = gtk_check_menu_item_new_with_mnemonic ("Playing");
-    g_signal_connect (item, "toggled", 
+    g_signal_connect (item, "toggled",
 	G_CALLBACK (swfmoz_player_menu_playing_toggled), player);
     g_signal_connect (player, "notify::playing",
 	G_CALLBACK (swfmoz_player_menu_notify_playing), item);
-    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), 
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item),
 	swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (player)));
     gtk_widget_show (item);
     gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
 
     item = gtk_check_menu_item_new_with_mnemonic ("Enable Audio");
-    g_signal_connect (item, "toggled", 
+    g_signal_connect (item, "toggled",
 	G_CALLBACK (swfmoz_player_menu_audio_toggled), player);
     g_signal_connect (player, "notify::audio-enabled",
 	G_CALLBACK (swfmoz_player_menu_notify_audio), item);
-    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), 
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item),
 	swfdec_gtk_player_get_audio_enabled (SWFDEC_GTK_PLAYER (player)));
     gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
+
+    submenu = gtk_menu_new();
+    item = gtk_radio_menu_item_new_with_mnemonic (NULL, "Always");
+    g_signal_connect (item, "toggled",
+        G_CALLBACK (swfmoz_player_menu_autoplay_always_toggled), player);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item),
+	swfmoz_config_read_autoplay (player->config, "global", FALSE));
+    gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (submenu), item);
+
+    item = gtk_radio_menu_item_new_with_mnemonic_from_widget (GTK_RADIO_MENU_ITEM (item),
+        "Remember last choice");
+    g_signal_connect (item, "toggled",
+	G_CALLBACK (swfmoz_player_menu_autoplay_remember_last_toggled), player);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item),
+        !swfmoz_config_has_global_key (player->config));
+    gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (submenu), item);
+
+    item = gtk_radio_menu_item_new_with_mnemonic_from_widget (GTK_RADIO_MENU_ITEM (item), "Never");
+    g_signal_connect (item, "toggled",
+        G_CALLBACK (swfmoz_player_menu_autoplay_never_toggled), player);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item),
+	!swfmoz_config_read_autoplay (player->config, "global", TRUE));
+    gtk_widget_show (item);
+    gtk_menu_shell_append (GTK_MENU_SHELL (submenu), item);
+
+    item = gtk_menu_item_new_with_label ("Autoplay");
+    gtk_widget_show (item);
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
     gtk_menu_shell_append (GTK_MENU_SHELL (player->menu), item);
 
     item = gtk_separator_menu_item_new ();

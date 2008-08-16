@@ -46,14 +46,21 @@ struct _SwfmozConfigClass
  GObjectClass 	parent;
 };
 
-GType		swfmoz_config_get_type   	(void);
+GType		swfmoz_config_get_type			(void);
 
-SwfmozConfig *	swfmoz_config_new		(void);
-gboolean 	swfmoz_config_should_autoplay 	(SwfmozConfig *config,
-						 const SwfdecURL *url);
-void		swfmoz_config_set_autoplay 	(SwfmozConfig *config,
-						 const SwfdecURL *url,
-						 gboolean autoplay);
+SwfmozConfig *	swfmoz_config_new			(void);
+gboolean	swfmoz_config_read_autoplay		(SwfmozConfig *config,
+							 const char *host,
+							 gboolean autoplay);
+gboolean 	swfmoz_config_should_autoplay 		(SwfmozConfig *config,
+							 const SwfdecURL *url);
+void		swfmoz_config_set_autoplay 		(SwfmozConfig *config,
+							 const SwfdecURL *url,
+							 gboolean autoplay);
+gboolean	swfmoz_config_has_global_key		(SwfmozConfig *config);
+void		swfmoz_config_set_global_autoplay	(SwfmozConfig *config,
+							 gboolean autoplay);
+void		swfmoz_config_remove_global_autoplay	(SwfmozConfig *config);
 
 G_END_DECLS
 #endif

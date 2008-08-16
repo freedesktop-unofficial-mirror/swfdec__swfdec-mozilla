@@ -35,19 +35,9 @@ swfmoz_config_save_file (SwfmozConfig *config)
   gchar *data;
   gsize data_size;
   GError *error = NULL;
-  gboolean has_global;
 
   gchar *keyfile_name = g_build_filename (g_get_user_config_dir (),
 					  SWFMOZ_CONFIG_FILE, NULL);
-
-  has_global = g_key_file_has_key (config->keyfile, "global", "autoplay",
-				   &error);
-  if (error) {
-    g_error_free (error);
-    error = NULL;
-  } else if (!has_global) {
-    g_key_file_set_boolean (config->keyfile, "global", "autoplay", FALSE);
-  }
 
   data = g_key_file_to_data (config->keyfile, &data_size, &error);
   if (error) {
@@ -94,7 +84,21 @@ swfmoz_config_read_file (void)
   return keyfile;
 }
 
-static gboolean
+gboolean
+swfmoz_config_has_global_key (SwfmozConfig *config)
+{
+  GError *error = NULL;
+  gboolean ret;
+
+  ret = g_key_file_has_key (config->keyfile, "global", "autoplay",
+				 &error);
+  if (error)
+    g_error_free (error);
+
+  return ret;
+}
+
+gboolean
 swfmoz_config_read_autoplay (SwfmozConfig *config, const char *host,
 			     gboolean autoplay)
 {
@@ -120,11 +124,13 @@ swfmoz_config_should_autoplay (SwfmozConfig *config, const SwfdecURL *url)
 
   g_return_val_if_fail (SWFMOZ_IS_CONFIG (config), FALSE);
 
+  if (swfmoz_config_has_global_key (config))
+    return swfmoz_config_read_autoplay (config, "global", autoplay);
+
   host = swfdec_url_get_host (url);
   if (host == NULL)
     host = swfdec_url_get_protocol (url);
 
-  autoplay = swfmoz_config_read_autoplay (config, "global", autoplay);
   autoplay = swfmoz_config_read_autoplay (config, host, autoplay);
 
   return autoplay;
@@ -144,6 +150,29 @@ swfmoz_config_set_autoplay (SwfmozConfig *config, const SwfdecURL *url,
 
   g_key_file_set_boolean (config->keyfile, host,
 			  "autoplay", autoplay);
+
+  swfmoz_config_save_file (config);
+}
+
+void
+swfmoz_config_set_global_autoplay (SwfmozConfig *config, gboolean autoplay)
+{
+  g_return_if_fail (SWFMOZ_IS_CONFIG (config));
+
+  g_key_file_set_boolean (config->keyfile, "global", "autoplay", autoplay);
+
+  swfmoz_config_save_file (config);
+}
+
+void
+swfmoz_config_remove_global_autoplay (SwfmozConfig *config)
+{
+  GError *error = NULL;
+  g_return_if_fail (SWFMOZ_IS_CONFIG (config));
+
+  g_key_file_remove_key (config->keyfile, "global", "autoplay", &error);
+  if (error)
+    g_error_free (error);
 
   swfmoz_config_save_file (config);
 }
