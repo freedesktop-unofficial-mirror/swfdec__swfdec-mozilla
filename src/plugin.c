@@ -396,7 +396,8 @@ plugin_set_window (NPP instance, NPWindow *window)
 
   if (window) {
     plugin_x11_setup_windowed (instance->pdata, (Window) window->window, 
-	window->x, window->y, window->width, window->height);
+	window->x, window->y, window->width, window->height,
+	((NPSetWindowCallbackStruct *)window->ws_info)->visual);
   } else {
     plugin_x11_teardown (instance->pdata);
   }

@@ -51,7 +51,7 @@ plugin_x11_handle_event (SwfmozPlayer *mozplay, XEvent *event)
 	GdkRectangle rect = { expose->x, expose->y, expose->width, expose->height };
 	GdkRegion *region = gdk_region_rectangle (&rect);
 	cairo_surface_t *surface = cairo_xlib_surface_create (expose->display, 
-	    expose->drawable, GDK_VISUAL_XVISUAL (gdk_drawable_get_visual (mozplay->target)),
+	    expose->drawable, mozplay->target_visual,
 	    expose->x + expose->width, expose->y + expose->height);
 	cairo_t *cr = cairo_create (surface);
 	swfmoz_player_render (mozplay, cr, region);
@@ -129,7 +129,7 @@ plugin_x11_handle_event (SwfmozPlayer *mozplay, XEvent *event)
 	XConfigureEvent *conf = (XConfigureEvent *) event;
 
 	if (!mozplay->windowless)
-	  swfmoz_player_set_target (mozplay, mozplay->target, 0, 0, conf->width, conf->height);
+	  swfmoz_player_set_target (mozplay, mozplay->target, 0, 0, conf->width, conf->height, mozplay->target_visual);
 	break;
       }
     default:
@@ -147,7 +147,7 @@ plugin_x11_filter_event (GdkXEvent *gdkxevent, GdkEvent *unused, gpointer player
 
 void
 plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow, 
-    int x, int y, int width, int height)
+    int x, int y, int width, int height, Visual *visual)
 {
   if (player->windowless) {
     if (player->target == NULL) {
@@ -157,9 +157,9 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
 	g_printerr ("cannot set window given for setup (id %lu)\n", xwindow);
 	return;
       }
-      swfmoz_player_set_target (player, window, x, y, width, height);
+      swfmoz_player_set_target (player, window, x, y, width, height, visual);
     } else {
-      swfmoz_player_set_target (player, player->target, x, y, width, height);
+      swfmoz_player_set_target (player, player->target, x, y, width, height, visual);
     }
   } else {
     if (player->target == NULL) {
@@ -186,7 +186,7 @@ plugin_x11_setup_windowed (SwfmozPlayer *player, Window xwindow,
       window = gdk_window_new (parent, &attr, GDK_WA_X | GDK_WA_Y);
       gdk_window_add_filter (window, plugin_x11_filter_event, player);
       gdk_window_show (window);
-      swfmoz_player_set_target (player, window, 0, 0, width, height);
+      swfmoz_player_set_target (player, window, 0, 0, width, height, visual);
     } else {
       gdk_window_move_resize (player->target, 0, 0, width, height);
     }
@@ -199,5 +199,5 @@ plugin_x11_teardown (SwfmozPlayer *player)
   if (player->target) {
     gdk_window_remove_filter (player->target, plugin_x11_filter_event, player);
   }
-  swfmoz_player_set_target (player, NULL, 0, 0, 0, 0);
+  swfmoz_player_set_target (player, NULL, 0, 0, 0, 0, NULL);
 }

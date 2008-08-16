@@ -654,7 +654,7 @@ swfmoz_player_add_loader (SwfmozPlayer *player, SwfmozLoader *loader)
 
 void
 swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target, 
-    int x, int y, int width, int height)
+    int x, int y, int width, int height, Visual *visual)
 {
   g_return_if_fail (SWFMOZ_IS_PLAYER (player));
   g_return_if_fail (target == NULL || GDK_IS_WINDOW (target));
@@ -689,6 +689,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
   player->target_rect.y = y;
   player->target_rect.width = width;
   player->target_rect.height = height;
+  player->target_visual = visual;
   swfdec_player_set_size (SWFDEC_PLAYER (player), width, height);
 }
 

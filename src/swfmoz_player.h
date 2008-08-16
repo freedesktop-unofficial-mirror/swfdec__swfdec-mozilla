@@ -57,6 +57,7 @@ struct _SwfmozPlayer {
   gboolean		opaque;			/* TRUE if the player should not allow translucency */
   GdkWindow *		target;			/* what we draw to */
   GdkRectangle		target_rect;		/* area in target that this plugin occupies */
+  Visual *		target_visual;		/* visual for drawing */
 
   GSource *		repaint_source;		/* set when repaint is necessary */
   GdkRegion *		repaint;		/* area to repaint or NULL if none */
@@ -89,7 +90,8 @@ void		swfmoz_player_set_target	(SwfmozPlayer *		player,
 						 int			x,
 						 int			y,
 						 int			width,
-						 int			height);
+						 int			height,
+						 Visual *		visual);
 void		swfmoz_player_set_allow_popups	(SwfmozPlayer *		player,
 						 gboolean		allow);
 void		swfmoz_player_render		(SwfmozPlayer *		player,

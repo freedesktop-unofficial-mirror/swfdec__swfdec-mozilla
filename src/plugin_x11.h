@@ -32,7 +32,8 @@ void	plugin_x11_setup_windowed	(SwfmozPlayer *	      player,
 					 int		      x,
 					 int		      y,
 					 int		      width,
-					 int		      height);
+					 int		      height,
+					 Visual *	      visual);
 void	plugin_x11_teardown		(SwfmozPlayer *	      player);
 void	plugin_x11_handle_event		(SwfmozPlayer *	      player,
 					 XEvent *	      event);
