@@ -244,6 +244,9 @@ swfmoz_player_redraw (SwfmozPlayer *player,
   GdkRegion *region;
   guint i;
 
+  if (player->target == NULL)
+    return;
+
   if (player->repaint)
     region = player->repaint;
   else
@@ -482,6 +485,18 @@ swfmoz_player_set_property (GObject *object, guint param_id, const GValue *value
 }
 
 static void
+swfmoz_player_clear_repaints (SwfmozPlayer *player)
+{
+  if (player->repaint_source) {
+    g_source_destroy (player->repaint_source);
+    g_source_unref (player->repaint_source);
+    player->repaint_source = NULL;
+    gdk_region_destroy (player->repaint);
+    player->repaint = NULL;
+  }
+}
+
+static void
 swfmoz_player_dispose (GObject *object)
 {
   SwfmozPlayer *player = SWFMOZ_PLAYER (object);
@@ -508,13 +523,7 @@ swfmoz_player_dispose (GObject *object)
     g_object_unref (player->target);
     player->target = NULL;
   }
-  if (player->repaint_source) {
-    g_source_destroy (player->repaint_source);
-    g_source_unref (player->repaint_source);
-    player->repaint_source = NULL;
-    gdk_region_destroy (player->repaint);
-    player->repaint = NULL;
-  }
+  swfmoz_player_clear_repaints (player);
   if (player->initial) {
     g_object_unref (player->initial);
     player->initial = NULL;
@@ -720,6 +729,7 @@ swfmoz_player_set_target (SwfmozPlayer *player, GdkWindow *target,
       g_object_unref (player->target);
     }
     player->target = target;
+    swfmoz_player_clear_repaints (player);
     if (target) {
       cairo_t *cr;
       SwfdecRenderer *renderer;
