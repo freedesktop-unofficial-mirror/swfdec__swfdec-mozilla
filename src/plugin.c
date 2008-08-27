@@ -127,7 +127,7 @@ NP_GetValue (void* reserved, NPPVariable var, void* out)
       break;
     case NPPVpluginDescriptionString:
       /* FIXME: find a way to encode the Swfdec version without breaking stupid JS scripts */
-      *val = (char *) "Shockwave Flash 9.0 r100";
+      *val = (char *) "Shockwave Flash 9.0 r999";
       break;
     case NPPVpluginNeedsXEmbed:
       *((PRBool*) val) = PR_FALSE;
