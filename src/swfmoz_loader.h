@@ -40,7 +40,7 @@ struct _SwfmozLoader
 {
   SwfdecLoader		parent;
 
-  NPP			instance;	/* instance we belong to */
+  NPP *			instance;	/* pointer to instance we belong to or to NULL if we don't belong to any instance */
   NPStream *		stream;		/* stream we do or NULL if not created yet */
   gboolean		initial;	/* we are the initial loader */
 

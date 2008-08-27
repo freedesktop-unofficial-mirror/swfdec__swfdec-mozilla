@@ -617,7 +617,7 @@ swfmoz_player_loaders_update (GtkListStore *store, GtkTreeIter *iter, SwfdecLoad
   }
 
   url = swfdec_loader_get_url (loader);
-  player = SWFMOZ_LOADER (loader)->instance->pdata;
+  player = (*SWFMOZ_LOADER (loader)->instance)->pdata;
   if (url && SWFMOZ_LOADER (loader)->initial && swfdec_player_get_variables (player)) {
     /* This auto-appends the FlashVars to the reported URL. You should be able
      * to copy/paste that URL easily without breakage that way 
@@ -1001,6 +1001,7 @@ swfmoz_player_remove (SwfmozPlayer *player)
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), FALSE);
   swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
   swfmoz_dialog_remove (player);
+  player->instance = NULL;
   g_object_unref (player);
 }
 

@@ -56,7 +56,7 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   SwfmozLoader *moz = SWFMOZ_LOADER (loader);
 
   moz->waiting_for_stream = TRUE;
-  moz->instance = mozplay->instance;
+  moz->instance = &mozplay->instance;
   if (mozplay->initial) {
     swfmoz_loader_set_stream (moz, mozplay->initial);
     mozplay->initial = NULL;
@@ -68,12 +68,12 @@ swfmoz_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
 
       combined = swfmoz_player_add_headers (buffer, header_count, header_names,
 	  header_values);
-      plugin_post_url_notify (moz->instance, url, NULL, (char *)combined->data,
+      plugin_post_url_notify (*moz->instance, url, NULL, (char *)combined->data,
 	  combined->length, moz);
       swfdec_buffer_unref (combined);
     } else {
       // FIXME: Impossible to set headers here?
-      plugin_get_url_notify (moz->instance, url, NULL, moz);
+      plugin_get_url_notify (*moz->instance, url, NULL, moz);
     }
   }
 }
@@ -85,8 +85,8 @@ swfmoz_loader_close (SwfdecStream *stream)
 
   moz->waiting_for_stream = FALSE;
 
-  if (moz->stream)
-    plugin_destroy_stream (moz->instance, moz->stream);
+  if (*moz->instance && moz->stream)
+    plugin_destroy_stream (*moz->instance, moz->stream);
 }
 
 static void
@@ -116,7 +116,7 @@ swfmoz_loader_set_stream (SwfmozLoader *loader, NPStream *stream)
   g_return_if_fail (stream != NULL);
 
   if (!loader->waiting_for_stream) {
-    plugin_destroy_stream (loader->instance, stream);
+    plugin_destroy_stream (*loader->instance, stream);
     return;
   }
 
@@ -138,7 +138,7 @@ swfmoz_loader_ensure_open (SwfmozLoader *loader)
   if (loader->open)
     return;
   swfdec_loader_set_url (SWFDEC_LOADER (loader), loader->stream->url);
-  swfmoz_player_add_loader (loader->instance->pdata, loader);
+  swfmoz_player_add_loader ((*loader->instance)->pdata, loader);
   swfdec_stream_open (SWFDEC_STREAM (loader));
   loader->open = TRUE;
 }
