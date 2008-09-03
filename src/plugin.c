@@ -36,7 +36,7 @@
 
 /* This is here so we can quickly disable windowless support. For now it's 
  * missing some features (cursor support) and redraws seem to be buggy */
-#define ENABLE_WINDOWLESS
+//#define DISABLE_WINDOWLESS
 
 NPNetscapeFuncs mozilla_funcs;
 
@@ -179,7 +179,7 @@ swfdec_mozilla_make_sure_this_thing_stays_in_memory (void)
   return TRUE;
 }
 
-#ifdef ENABLE_WINDOWLESS
+#ifndef DISABLE_WINDOWLESS
 /* returns true if this instance can run windowless */
 static gboolean
 plugin_try_windowless (NPP instance)
@@ -230,7 +230,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
    * won't be unloaded, i.e. NPPVpluginKeepLibraryInMemory was successful */
   swfdec_init ();
 
-#ifdef ENABLE_WINDOWLESS
+#ifndef DISABLE_WINDOWLESS
   /* parse pre-creation properties */
   for (i = 0; i < argc; i++) {
     if (g_ascii_strcasecmp (argn[i], "wmode") == 0) {
