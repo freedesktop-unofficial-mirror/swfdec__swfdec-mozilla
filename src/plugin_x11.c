@@ -201,3 +201,20 @@ plugin_x11_teardown (SwfmozPlayer *player)
   }
   swfmoz_player_set_target (player, NULL, 0, 0, 0, 0, NULL);
 }
+
+GdkWindow *
+plugin_get_window (NPP instance)
+{
+  Window xid;
+  GdkWindow *window;
+
+  if (!plugin_get_value (instance, NPNVnetscapeWindow, &xid))
+    return NULL;
+  
+  window = gdk_window_lookup (xid);
+  if (window)
+    return window;
+
+  return gdk_window_foreign_new (xid);
+}
+

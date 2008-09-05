@@ -20,7 +20,7 @@
 #ifndef _SWFMOZ_PLUGIN_H_
 #define _SWFMOZ_PLUGIN_H_
 
-#include <glib.h>
+#include <gdk/gdk.h>
 #include <npapi.h>
 
 G_BEGIN_DECLS
@@ -58,6 +58,10 @@ void		plugin_invalidate_rect		(NPP		instance,
 gboolean	plugin_push_allow_popups	(NPP		instance,
 						 gboolean	allow);
 gboolean	plugin_pop_allow_popups		(NPP		instance);
+
+/* in plugin_x11.h */
+GdkWindow *	plugin_get_window		(NPP		instance);
+
 
 G_END_DECLS
 #endif

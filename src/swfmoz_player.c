@@ -458,6 +458,33 @@ swfmoz_player_notify (SwfmozPlayer *player, GParamSpec *pspec, gpointer unused)
   }
 }
 
+static gboolean
+swfmoz_player_query_size (SwfmozPlayer *player, gboolean fullscreen, 
+    int *width, int *height)
+{
+  if (fullscreen) {
+    GdkWindow *window = plugin_get_window (player->instance);
+    GdkScreen *screen;
+    GdkRectangle rect;
+    int monitor;
+
+    if (window == NULL)
+      return FALSE;
+    screen = gdk_drawable_get_screen (GDK_DRAWABLE (window));
+    monitor = gdk_screen_get_monitor_at_window (screen, window);
+    gdk_screen_get_monitor_geometry (screen, monitor, &rect);
+    *width = rect.width;
+    *height = rect.height;
+  } else if (player->target == NULL) {
+    *width = -1;
+    *height = -1;
+  } else {
+    *width = player->target_rect.width;
+    *height = player->target_rect.height;
+  }
+  return TRUE;
+}
+
 static void
 swfmoz_player_get_property (GObject *object, guint param_id, GValue *value, 
     GParamSpec * pspec)
@@ -519,6 +546,7 @@ swfmoz_player_dispose (GObject *object)
   g_signal_handlers_disconnect_by_func (player, swfmoz_player_redraw, NULL);
   g_signal_handlers_disconnect_by_func (player, swfmoz_player_launch, NULL);
   g_signal_handlers_disconnect_by_func (player, swfmoz_player_notify, NULL);
+  g_signal_handlers_disconnect_by_func (player, swfmoz_player_query_size, NULL);
   if (player->target) {
     g_object_unref (player->target);
     player->target = NULL;
@@ -555,6 +583,7 @@ swfmoz_player_init (SwfmozPlayer *player)
   g_signal_connect (player, "invalidate", G_CALLBACK (swfmoz_player_redraw), NULL);
   g_signal_connect (player, "launch", G_CALLBACK (swfmoz_player_launch), NULL);
   g_signal_connect (player, "notify", G_CALLBACK (swfmoz_player_notify), NULL);
+  g_signal_connect (player, "query-size", G_CALLBACK (swfmoz_player_query_size), NULL);
   player->context = g_main_context_default ();
 
   player->loaders = GTK_TREE_MODEL (gtk_list_store_new (SWFMOZ_LOADER_N_COLUMNS,

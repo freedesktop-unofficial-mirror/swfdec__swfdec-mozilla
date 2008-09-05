@@ -26,17 +26,17 @@
 
 G_BEGIN_DECLS
 
+void		plugin_x11_setup_windowed	(SwfmozPlayer *	      player,
+						 Window		      window,
+						 int		      x,
+						 int		      y,
+						 int		      width,
+						 int		      height,
+						 Visual *	      visual);
+void		plugin_x11_teardown		(SwfmozPlayer *	      player);
+void		plugin_x11_handle_event		(SwfmozPlayer *	      player,
+						 XEvent *	      event);
 
-void	plugin_x11_setup_windowed	(SwfmozPlayer *	      player,
-					 Window		      window,
-					 int		      x,
-					 int		      y,
-					 int		      width,
-					 int		      height,
-					 Visual *	      visual);
-void	plugin_x11_teardown		(SwfmozPlayer *	      player);
-void	plugin_x11_handle_event		(SwfmozPlayer *	      player,
-					 XEvent *	      event);
 
 G_END_DECLS
 #endif
