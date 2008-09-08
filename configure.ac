@@ -1,12 +1,7 @@
 AC_PREREQ([2.58])
 AC_INIT(swfdec-mozilla,0.7.5)
 
-[is_dev=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/1/')]
-if test x"$is_dev" = x1 ; then
-  SWFDEC_CVS="yes"
-else
-  SWFDEC_CVS="no"
-fi
+[SWFDEC_DEVEL=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/yes/')]
 
 AM_INIT_AUTOMAKE(1.6)
 dnl AC_CANONICAL_TARGET([])
@@ -24,12 +19,10 @@ dnl I want this but stupid headers don't let me
 dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
 AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default")
 dnl if we're in nano >= 1, add -Werror if supported
-if test x$SWFDEC_CVS = xyes ; then
+if test x$SWFDEC_DEVEL = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
 fi
 
-SWFDEC_LIBVERSION="0:0:0"
-AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
 dnl Add parameters for aclocal
