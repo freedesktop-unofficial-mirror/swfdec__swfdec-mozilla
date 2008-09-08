@@ -1,4 +1,11 @@
 
+ 0.8.0 ("Best Friends Forever")
+
+Second long-term of Swfdec, here we go:
+- Add UI for handling autoplay to the right-click menu
+- Bump reported version to 9.0r999
+- Fix some rare crashers
+
  0.7.4 ("Whites won again")
 
 Not much has happened here since the last release:
