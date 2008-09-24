@@ -342,6 +342,8 @@ plugin_destroy_stream_cb (NPP instance, NPStream* stream, NPReason reason)
   swfmoz_loader_ensure_open (stream->pdata);
   swfdec_stream_close (stream->pdata);
   SWFMOZ_LOADER (stream->pdata)->stream = NULL;
+  if (SWFMOZ_PLAYER (instance->pdata)->initial == stream->pdata)
+    SWFMOZ_PLAYER (instance->pdata)->initial = NULL;
   g_object_unref (stream->pdata);
   return NPERR_NO_ERROR;
 }
