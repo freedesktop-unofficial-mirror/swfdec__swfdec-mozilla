@@ -552,10 +552,6 @@ swfmoz_player_dispose (GObject *object)
     player->target = NULL;
   }
   swfmoz_player_clear_repaints (player);
-  if (player->initial) {
-    g_object_unref (player->initial);
-    player->initial = NULL;
-  }
   if (player->loaders) {
     g_object_unref (player->loaders);
     player->loaders = NULL;
