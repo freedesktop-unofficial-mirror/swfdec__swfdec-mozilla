@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec-mozilla,0.8.2)
+AC_INIT(swfdec-mozilla,0.8.3)
 
 [SWFDEC_DEVEL=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/yes/')]
 
