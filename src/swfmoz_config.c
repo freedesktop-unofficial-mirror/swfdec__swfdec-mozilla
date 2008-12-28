@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <glib/gstdio.h>
+
 #include "swfmoz_config.h"
 
 G_DEFINE_TYPE (SwfmozConfig, swfmoz_config, G_TYPE_OBJECT)
@@ -40,13 +42,18 @@ swfmoz_config_save_file (SwfmozConfig *config)
 					  SWFMOZ_CONFIG_FILE, NULL);
 
   data = g_key_file_to_data (config->keyfile, &data_size, &error);
-  if (error) {
+  if (error)
     goto fail;
-  }
 
-  g_file_set_contents (keyfile_name, data, data_size, &error);
-  if (error) {
-    goto fail;
+  if (!g_file_set_contents (keyfile_name, data, data_size, &error)) {
+    /* try creating the config directory if it doesn't exist yet */
+    if (g_mkdir_with_parents (g_get_user_config_dir (), 0700) == 0) {
+      g_error_free (error);
+      if (!g_file_set_contents (keyfile_name, data, data_size, &error))
+	goto fail;
+    } else {
+      goto fail;
+    }
   }
 
   g_free (data);
