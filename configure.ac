@@ -10,7 +10,7 @@ SWFDEC_MAJORMINOR=0.9
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
-AC_SUBST(ACLOCAL_AMFLAGS, "-I m4")
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl decide on error flags
 dnl if we support them, we set them unconditionally
