@@ -289,7 +289,7 @@ plugin_new (NPMIMEType mime_type, NPP instance,
       guint j;
 
       for (j = 0; j < G_N_ELEMENTS (possibilities); j++) {
-	if (g_ascii_strcasecmp (argv[j], possibilities[j].name) == 0) {
+	if (g_ascii_strcasecmp (argv[i], possibilities[j].name) == 0) {
 	  align = possibilities[j].align;
 	  break;
 	}
